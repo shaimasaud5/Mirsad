@@ -1,0 +1,4 @@
+Q2 planning notes
+- Expand Pro Plan marketing in Jeddah.
+- Enterprise deals in Riyadh are growing; hire one more account manager.
+- Performance tickets take the longest to resolve; investigate the API latency.

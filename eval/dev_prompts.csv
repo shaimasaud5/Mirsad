@@ -1,0 +1,61 @@
+id,label,prompt
+1,simple,Summarize this paragraph in one sentence: Our Q2 sales grew because of new customers in Jeddah.
+2,simple,Translate 'good morning' to French.
+3,simple,What is the capital of Japan?
+4,simple,Read sales.csv and tell me the total revenue.
+5,simple,List the files you can read.
+6,simple,Fix the spelling in this sentence: 'Teh meeting is tommorow.'
+7,simple,Give me three synonyms for 'fast'.
+8,simple,Convert 25 degrees Celsius to Fahrenheit.
+9,simple,What does API stand for?
+10,simple,Write a short thank-you message to a colleague.
+11,simple,How many tickets are in support_tickets.csv?
+12,simple,Rewrite this more politely: 'Send me the report now.'
+13,simple,What is 15% of 2400?
+14,simple,Extract the email address from: 'Contact sara@example.com for details.'
+15,simple,Classify this review as positive or negative: 'The app keeps crashing.'
+16,simple,Give me a title for a blog post about remote work.
+17,simple,What day of the week was 1 January 2026?
+18,simple,Read team_notes.txt and list the action items.
+19,simple,Turn this into a bullet list: apples bananas oranges.
+20,simple,What is the plural of 'analysis'?
+21,simple,Shorten this subject line: 'Reminder regarding the meeting that will happen next week'.
+22,simple,Which month had the highest units in sales.csv?
+23,simple,Define the word 'latency' in one sentence.
+24,simple,Write a one-line commit message for fixing a typo in the README.
+25,simple,Count the words in: 'Smart routing saves money on tokens.'
+26,simple,Is 97 a prime number?
+27,simple,Reply 'yes' or 'no': is Python case-sensitive?
+28,simple,What does HTTP status 404 mean?
+29,simple,Give me a quick explanation of what a CSV file is.
+30,simple,Please compare these two numbers and tell me which is bigger: 4500 and 4050.
+31,complex,Implement a Python function that detects anomalies in a time series using a rolling z-score.
+32,complex,Debug this code and explain why it fails: def avg(xs): return sum(xs)/len(xs) when xs is empty.
+33,complex,Design a database schema for a clinic appointment system with waitlists and cancellations.
+34,complex,Analyze sales.csv and explain why revenue in Riyadh differs from Jeddah. Then propose a plan to close the gap.
+35,complex,Compare REST and GraphQL for a mobile app backend and recommend one with trade-offs.
+36,complex,Write a SQL query that returns the top 3 regions by revenue growth month over month: SELECT region FROM sales ...
+37,complex,Refactor this function to be more readable and efficient: def f(l): r=[] ; for i in l: if i not in r: r.append(i) ; return r
+38,complex,Explain step by step how a transformer model computes attention.
+39,complex,Prove that the sum of the first n odd numbers is n squared.
+40,complex,Plan a migration strategy from a monolith to microservices for an e-commerce platform.
+41,complex,"First read support_tickets.csv, then group tickets by category, then identify which category is slowest to resolve and suggest root causes."
+42,complex,Our API latency jumped from 200ms to 2s after yesterday's deploy. What could be the root cause and how should we investigate?
+43,complex,Write a script that reads a CSV of transactions and flags possible fraud using simple rules.
+44,complex,Evaluate the pros and cons of using SQLite versus PostgreSQL for a monitoring tool.
+45,complex,Diagnose this error: Traceback (most recent call last): KeyError: 'revenue' in pandas groupby.
+46,complex,Create an algorithm to schedule 10 meetings across 4 rooms with no overlaps and minimal idle time.
+47,complex,Design a caching layer for an LLM proxy and explain how to invalidate it safely.
+48,complex,Explain why gradient descent can get stuck in local minima and how momentum helps.
+49,complex,Build a step by step marketing strategy for launching a Pro Plan in Dammam with a limited budget.
+50,complex,"Given the sales data, forecast next quarter revenue per region and explain the assumptions you used."
+51,complex,Write unit tests with pytest for a function that validates Saudi phone numbers.
+52,complex,What are the security risks of letting an AI agent run shell commands and how would you mitigate each one?
+53,complex,Optimize this query for speed and explain the indexing choices: SELECT * FROM orders WHERE customer_id = 5 ORDER BY created_at.
+54,complex,Analyze the support tickets and design an escalation policy for high-priority performance issues.
+55,complex,How would you architect a real-time dashboard that ingests 10k events per second? What components would you pick?
+56,complex,Write a Python class that implements an LRU cache with get and put in O(1).
+57,complex,Read team_notes.txt and the sales data and write a short strategy memo with three prioritized recommendations.
+58,complex,Why does my agent keep calling the same tool after it fails? How can I detect and stop that automatically?
+59,complex,Compare three approaches to classify prompt complexity and recommend one for a low-budget student project.
+60,complex,Help me reason about whether to cache model responses: what are the risks for correctness and privacy?

@@ -1,0 +1,41 @@
+id,label,prompt
+101,simple,What time zone is Riyadh in?
+102,simple,Translate 'thank you very much' into Spanish.
+103,simple,Read support_tickets.csv and tell me how many are high priority.
+104,simple,Make this sentence shorter: 'We would like to inform you that the office will be closed.'
+105,simple,What is 12 multiplied by 18?
+106,simple,Give me a catchy name for a coffee shop.
+107,simple,What is the file extension for a Python script?
+108,simple,Summarize team_notes.txt in two lines.
+109,simple,Is JSON a programming language?
+110,simple,Write a polite reminder that the report is due Thursday.
+111,simple,What is the opposite of 'increase'?
+112,simple,Format this date as YYYY-MM-DD: 22 October 2026.
+113,simple,Which region appears most often in sales.csv?
+114,simple,What does CPU stand for?
+115,simple,Turn 'meeting moved to 3pm' into a short Slack message.
+116,simple,Give an example of a strong password pattern.
+117,simple,What is the square root of 144?
+118,simple,Say hello in Arabic.
+119,simple,Who wrote Romeo and Juliet?
+120,simple,Sort these numbers: 9 2 7 4.
+121,complex,Implement binary search in Python and explain its time complexity.
+122,complex,Design an API for a ride-sharing app including endpoints and data models.
+123,complex,Debug why my Streamlit app reruns the whole script on every button click and how to avoid recomputation.
+124,complex,"Analyze support_tickets.csv, find patterns in resolution time, and recommend process changes."
+125,complex,Explain why our model's accuracy dropped after retraining and how to investigate data drift.
+126,complex,Write a function that merges overlapping time intervals and include test cases.
+127,complex,Compare three cloud providers for hosting a small AI startup and justify your choice.
+128,complex,Plan a 4-week study schedule to pass a cloud AI certification while working full time.
+129,complex,How would you detect fraud in real time for a payment gateway?
+130,complex,Refactor a 500-line Flask app into modules with blueprints and explain the structure.
+131,complex,What are the trade-offs between fine-tuning a model and using retrieval-augmented generation?
+132,complex,Derive the formula for the variance of the sum of two independent random variables.
+133,complex,Create a disaster recovery strategy for a database that must have under 5 minutes of downtime.
+134,complex,Evaluate whether our sales growth is driven by price or by volume using sales.csv.
+135,complex,Write a SQL query to find customers who bought in three consecutive months.
+136,complex,Diagnose why Docker builds are slow in CI and propose fixes ranked by impact.
+137,complex,Build a decision framework for when an AI agent should ask a human for approval.
+138,complex,Explain step by step how TLS establishes a secure connection.
+139,complex,Propose a monitoring setup with alerts for an LLM application and justify each metric.
+140,complex,Optimize a pandas pipeline that takes 10 minutes on 5 million rows.

@@ -1,0 +1,9 @@
+ticket_id,category,priority,resolution_hours
+T-101,billing,low,4
+T-102,login,high,1
+T-103,billing,medium,6
+T-104,performance,high,12
+T-105,login,low,2
+T-106,performance,medium,9
+T-107,billing,high,3
+T-108,feature_request,low,48

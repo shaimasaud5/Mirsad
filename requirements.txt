@@ -1,0 +1,15 @@
+# Pinned versions so every team member runs exactly the same code.
+# LiteLLM: never use 1.82.7 or 1.82.8 (compromised on PyPI in March 2026, since removed).
+fastapi==0.154.0
+uvicorn==0.54.0
+litellm==1.106.0
+langchain==1.4.6
+langchain-core==1.6.12
+langchain-openai==1.7.2
+langgraph==1.2.16
+openai==2.54.0
+streamlit==1.66.0
+pandas==3.0.6
+python-dotenv==1.2.4
+httpx==0.28.1
+pytest==9.1.1

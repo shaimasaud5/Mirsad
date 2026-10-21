@@ -1,0 +1,13 @@
+month,region,product,units,revenue_sar
+2026-01,Riyadh,Basic Plan,120,35880
+2026-01,Jeddah,Basic Plan,95,28405
+2026-01,Dammam,Pro Plan,40,39960
+2026-02,Riyadh,Pro Plan,55,54945
+2026-02,Jeddah,Basic Plan,110,32890
+2026-02,Dammam,Basic Plan,70,20930
+2026-03,Riyadh,Enterprise,8,63920
+2026-03,Jeddah,Pro Plan,48,47952
+2026-03,Dammam,Basic Plan,85,25415
+2026-04,Riyadh,Basic Plan,130,38870
+2026-04,Jeddah,Enterprise,5,39950
+2026-04,Dammam,Pro Plan,36,35964
