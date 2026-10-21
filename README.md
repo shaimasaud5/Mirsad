@@ -10,9 +10,9 @@ Zero budget: models run on Groq's free tier; costs on the dashboard are
 real token counts.
 
 ```
-Chat page -> LangChain agent -> Mirsad proxy -> [loop guard -> router -> LiteLLM] -> Groq
+Web UI (chat) -> LangChain agent -> Mirsad proxy -> [loop guard -> router -> LiteLLM] -> Groq
                                         |
-                                        +-> SQLite -> Streamlit dashboard (+ alerts)
+                                        +-> SQLite -> web dashboard (+ alerts)
 ```
 
 ## Routing modes (`MIRSAD_ROUTING_MODE` in `.env`)
@@ -73,11 +73,15 @@ Then open the Groq console model list and check that `SMALL_MODEL` and
 # Terminal 1 - the proxy
 uvicorn proxy.main:app --port 8000
 
-# Terminal 2 - chat + dashboard
-streamlit run ui/app.py
+# Terminal 2 - chat + dashboard (web UI)
+uvicorn ui.web_server:app --port 8501
 ```
-Open http://localhost:8501. Use the sidebar buttons on the **Chat** page,
-then switch to **Dashboard**.
+Open http://localhost:8501. Start from one of the three scenario cards, then open
+**Dashboard** in the sidebar. The language (العربية / English) and theme (light / dark / auto)
+switches are in the top bar and in the user menu at the bottom of the sidebar. Recent chats are
+kept in the browser (localStorage).
+
+The previous Streamlit page still works (`streamlit run ui/app.py`) but is no longer maintained.
 
 **No internet / Groq down?** Set `MIRSAD_MOCK=1` in `.env` and restart the
 proxy. Everything works with simulated replies (never present mock numbers as
@@ -98,7 +102,7 @@ real results).
 
 ```bash
 python -m eval.run_eval      # writes eval/results/summary.md
-pytest -q                    # 18 tests, all offline
+pytest -q                    # 68 tests, all offline
 ```
 
 | Metric | Result | How |
@@ -119,6 +123,10 @@ the held-out set is not written by the same author as the rules.
 config.py            all thresholds, model names and prices in one place
 proxy/main.py        FastAPI endpoint: the 7-step pipeline
 proxy/router.py      rule-based complexity score -> simple / complex
+proxy/routing.py     routing modes (rules / shadow / local_llm), one decision per user turn
+proxy/classifier.py  local Qwen classifier via Ollama (classifies only, never answers)
+proxy/provider.py    Groq call through LiteLLM with API-key failover
+proxy/credentials.py primary + backup Groq keys (aliases only in logs)
 proxy/loop_guard.py  repeated-failure detection per session
 proxy/cost.py        token pricing, baseline, savings formula
 proxy/db.py          SQLite schema and writes
@@ -126,7 +134,9 @@ proxy/mock.py        offline fake model (tool calls + loops)
 agent/agent.py       LangChain create_agent pointed at the proxy
 agent/tools.py       list_files, read_file, calculator, fetch_report (always fails)
 monitoring/metrics.py  dashboard metrics + alert rules
-ui/app.py            Streamlit Chat + Dashboard pages
+ui/web_server.py     FastAPI app for the web UI: /api/chat, /api/metrics
+ui/web/index.html    chat + dashboard page (AR/EN, light/dark), libraries bundled in ui/web/vendor
+ui/app.py            old Streamlit page (kept for reference)
 eval/                dev/test prompt sets and run_eval.py
 tests/               pytest suite
 docs/diagrams.md     Development flow + Monitoring flow (Mermaid)
@@ -141,7 +151,7 @@ data/files/          sample files the agent can read
 | Route by latest **user** message | All steps of one task use the same model, stable for tool calling | A simple follow-up step can't drop to the small model |
 | OpenAI-compatible API | Any agent integrates by changing `base_url` only | No streaming support yet |
 | Loop guard on tool-call fingerprints | Catches real retry loops; healthy retries are not blocked | Different-input loops are not caught (agent step limit covers them) |
-| SQLite + 2 s polling | No extra services; dashboard feels live | Single machine only |
+| SQLite + 3 s polling | No extra services; dashboard feels live | Single machine only |
 | LiteLLM | One code path for any provider; switch with config | Extra dependency, pinned for supply-chain safety |
 | Simulated OpenAI pricing | Groq free tier costs 0, so savings need a realistic price scale | Numbers are estimates, labelled as such |
 
