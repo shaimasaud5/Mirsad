@@ -3,6 +3,7 @@
 fastapi==0.154.0
 uvicorn==0.54.0
 litellm==1.106.0
+mcp==2.3.0          # LiteLLM imports it whenever tools are sent (live mode only)
 langchain==1.4.6
 langchain-core==1.6.12
 langchain-openai==1.7.2
