@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mirsad</title>
-<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Inter:wght@400;500;600&display=swap">
 <script>
@@ -21,29 +22,35 @@
 </script>
 <style>
 :root {
-  --bg: #FAF9F7; --sidebar: #F3F1EC; --surface: #FFFFFF; --surface-2: #F3F1EC; --hover: #EAE7E0;
-  --border: #E5E2DB; --border-strong: #D3CFC6;
-  --text: #1F1E1C; --text-2: #5F5C56; --text-3: #8C8981;
-  --accent: #0F766E; --accent-hover: #0B5F58; --accent-soft: #E1F2EF; --on-accent: #FFFFFF;
-  --success: #15803D; --success-bg: #E7F4EA;
-  --pro: #6D28D9; --pro-bg: #EFEAFC;
-  --danger: #B42318; --danger-bg: #FCEBE9;
-  --warning: #9A6700; --warning-bg: #FBF1D9;
-  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.06);
+  /* Light: the logo's cream paper, near-black ink and navy lettering */
+  --bg: #F1EFE8; --sidebar: #E9E6DD; --surface: #FAF9F5; --surface-2: #E8E5DC; --hover: #E0DCD2;
+  --border: #DBD7CC; --border-strong: #C5C0B4;
+  --text: #16110D; --text-2: #57524A; --text-3: #8A857B;
+  --accent: #111930; --accent-hover: #24304F; --accent-soft: #E1E3EA; --on-accent: #F3F3F1;
+  --chart-1: #1E2B4F; --chart-2: #A3957C;
+  --logo: url(/logo-light.png);
+  --success: #2F7A45; --success-bg: #E2EEDF;
+  --pro: #4B3FA6; --pro-bg: #E7E4F3;
+  --danger: #A8321F; --danger-bg: #F5E1DB;
+  --warning: #8A6200; --warning-bg: #F3E9CF;
+  --shadow: 0 1px 2px rgba(22,17,13,.05), 0 4px 16px rgba(22,17,13,.07);
   --radius: 10px; --radius-lg: 16px;
   --font: "Inter", "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   color-scheme: light;
 }
 :root[data-theme="dark"] {
-  --bg: #262624; --sidebar: #1F1E1D; --surface: #30302E; --surface-2: #2B2A28; --hover: #3A3936;
-  --border: #3D3C39; --border-strong: #52504B;
-  --text: #EDEBE6; --text-2: #B3B0A8; --text-3: #8A877F;
-  --accent: #2DBFAE; --accent-hover: #4FD1C1; --accent-soft: #173431; --on-accent: #0C1F1D;
-  --success: #5BD38A; --success-bg: #183222;
-  --pro: #B29BFA; --pro-bg: #2B2443;
-  --danger: #F2837A; --danger-bg: #3B201E;
-  --warning: #E9B949; --warning-bg: #36301A;
+  /* Dark: the logo's charcoal background with its off-white mark */
+  --bg: #1F1E1D; --sidebar: #181716; --surface: #292826; --surface-2: #252422; --hover: #32302D;
+  --border: #363431; --border-strong: #4A4743;
+  --text: #F3F3F1; --text-2: #B4B1A9; --text-3: #898579;
+  --accent: #F3F3F1; --accent-hover: #FFFFFF; --accent-soft: #32302D; --on-accent: #1F1E1D;
+  --chart-1: #E6E3DA; --chart-2: #8D9AC4;
+  --logo: url(/logo-dark.png);
+  --success: #6CCB8B; --success-bg: #1E3024;
+  --pro: #ADA2F0; --pro-bg: #2A2740;
+  --danger: #EE8C7D; --danger-bg: #3A2320;
+  --warning: #E3B95B; --warning-bg: #352E1C;
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
   color-scheme: dark;
 }
@@ -63,7 +70,7 @@ svg.i { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none;
 .app.collapsed .sidebar { border: 0; }
 .sidebar-inner { width: 264px; display: flex; flex-direction: column; height: 100%; padding: 12px 10px; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 14px; font-weight: 600; font-size: 17px; }
-.brand img { width: 28px; height: 28px; border-radius: 8px; }
+.logo { display: inline-block; width: var(--s, 28px); height: var(--s, 28px); flex: none; background: var(--logo) center / contain no-repeat; }
 .nav-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 8px; color: var(--text); text-align: start; font-size: 14px; }
 .nav-item:hover { background: var(--hover); }
 .nav-item.active { background: var(--hover); font-weight: 500; }
@@ -106,7 +113,7 @@ svg.i { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none;
 .thread { flex: 1; overflow-y: auto; }
 .thread-inner { max-width: 760px; margin: 0 auto; padding: 8px 20px 24px; }
 .empty { text-align: center; padding: 8vh 0 12px; }
-.empty img { width: 56px; height: 56px; border-radius: 16px; }
+
 .empty h1 { font-size: 28px; font-weight: 600; margin: 16px 0 6px; letter-spacing: -.01em; }
 .empty p { color: var(--text-2); margin: 0 auto 28px; max-width: 520px; }
 .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; text-align: start; }
@@ -125,7 +132,7 @@ svg.i { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none;
 .msg.user { display: flex; justify-content: flex-end; }
 .bubble { background: var(--surface-2); border-radius: 18px; padding: 10px 16px; max-width: 85%; white-space: pre-wrap; word-wrap: break-word; }
 .msg.bot { display: flex; gap: 12px; }
-.msg.bot > img { width: 28px; height: 28px; border-radius: 8px; flex: none; margin-top: 2px; }
+.msg.bot > .logo { margin-top: 1px; }
 .bot-body { min-width: 0; flex: 1; }
 .answer { word-wrap: break-word; }
 .answer p { margin: 0 0 10px; } .answer p:last-child { margin-bottom: 0; }
@@ -243,7 +250,7 @@ details.tech > summary { cursor: pointer; font-weight: 500; color: var(--text-2)
 <div class="app" id="app">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-inner">
-      <div class="brand"><img src="/logo.svg" alt=""><span data-i18n="brand">Mirsad</span></div>
+      <div class="brand"><span class="logo" style="--s:34px" role="img" aria-label="Mirsad logo"></span><span data-i18n="brand">Mirsad</span></div>
       <button class="nav-item" id="nav-new"><svg class="i"><use href="#i-new"/></svg><span data-i18n="newChat">New chat</span></button>
       <button class="nav-item" id="nav-dash"><svg class="i"><use href="#i-chart"/></svg><span data-i18n="dashboard">Dashboard</span></button>
       <div class="section-label" data-i18n="recents">Recents</div>
@@ -563,11 +570,11 @@ function messageHtml(m) {
   } else {
     body = `<div class="answer" dir="auto">${md(m.content)}</div>`;
   }
-  return `<div class="msg bot"><img src="/logo.svg" alt=""><div class="bot-body">${body}${badges(m)}${stepsHtml(m.steps)}</div></div>`;
+  return `<div class="msg bot"><span class="logo" style="--s:30px" aria-hidden="true"></span><div class="bot-body">${body}${badges(m)}${stepsHtml(m.steps)}</div></div>`;
 }
 function emptyHtml() {
   return `<div class="empty">
-    <img src="/logo.svg" alt="">
+    <span class="logo" style="--s:104px" role="img" aria-label="Mirsad logo"></span>
     <h1>${esc(t("heroTitle"))}</h1>
     <p>${esc(t("heroSub"))}</p>
     <div class="cards">${SCENARIOS.map((s, i) => `
@@ -582,7 +589,7 @@ function renderThread() {
   if (!chat || !chat.messages.length) { inner.innerHTML = emptyHtml(); return; }
   inner.innerHTML = chat.messages.map(messageHtml).join("") +
     (state.sending && state.sendingId === chat.id
-      ? `<div class="msg bot"><img src="/logo.svg" alt=""><div class="thinking">${esc(t("thinking"))}<span class="dots"><span></span><span></span><span></span></span></div></div>` : "");
+      ? `<div class="msg bot"><span class="logo" style="--s:30px" aria-hidden="true"></span><div class="thinking">${esc(t("thinking"))}<span class="dots"><span></span><span></span><span></span></span></div></div>` : "");
   const th = $("#thread"); th.scrollTop = th.scrollHeight;
 }
 async function send(text) {
@@ -697,7 +704,7 @@ function upsertChart(id, cfg) {
 }
 function renderCharts(d) {
   if (!window.Chart) return;
-  const text2 = css("--text-2"), grid = css("--border"), accent = css("--accent"), pro = css("--pro"),
+  const text2 = css("--text-2"), grid = css("--border"), accent = css("--chart-1"), pro = css("--chart-2"),
         success = css("--success"), danger = css("--danger"), warning = css("--warning"), muted = css("--text-3");
   Chart.defaults.color = text2; Chart.defaults.borderColor = grid;
   Chart.defaults.font.family = css("--font");

@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # repo root on the
 
 import httpx
 import pandas as pd
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -116,9 +116,14 @@ def index():
     return FileResponse(WEB_DIR / "index.html")
 
 
-@app.get("/logo.svg")
-def logo():
-    return FileResponse(WEB_DIR / "logo.svg", media_type="image/svg+xml")
+BRAND_FILES = ("logo-light.png", "logo-dark.png", "favicon.png", "apple-touch-icon.png")
+
+
+@app.get("/{name}.png")
+def brand_image(name: str):
+    if f"{name}.png" not in BRAND_FILES:
+        raise HTTPException(status_code=404)
+    return FileResponse(WEB_DIR / f"{name}.png", media_type="image/png")
 
 
 app.mount("/vendor", StaticFiles(directory=WEB_DIR / "vendor"), name="vendor")   # marked, DOMPurify, Chart.js

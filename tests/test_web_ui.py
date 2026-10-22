@@ -12,7 +12,9 @@ proxy = TestClient(proxy_app)
 
 def test_page_logo_and_bundled_libraries_are_served():
     assert "<title>Mirsad</title>" in client.get("/").text
-    assert client.get("/logo.svg").status_code == 200
+    for img in ("logo-light.png", "logo-dark.png", "favicon.png", "apple-touch-icon.png"):
+        assert client.get(f"/{img}").status_code == 200
+    assert client.get("/secret.png").status_code == 404
     for lib in ("marked.min.js", "purify.min.js", "chart.umd.js"):
         assert client.get(f"/vendor/{lib}").status_code == 200
 
