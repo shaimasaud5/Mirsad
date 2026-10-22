@@ -132,6 +132,19 @@ Cost figures are **estimated inference cost at list price**, not an invoice. The
 tokens* at the configured BIG model's rates; it is hypothetical, can be negative, and does not prove real savings.
 Prices live in `config.MODEL_PRICES` (source and retrieval date next to it): update them there when Groq changes a rate.
 
+### Answering models
+
+| Role | Model | Groq list price, USD per 1M tokens (in / out) |
+|---|---|---|
+| `SMALL_MODEL` (simple prompts) | `groq/openai/gpt-oss-20b` | 0.075 / 0.30 |
+| `BIG_MODEL` (complex prompts) | `groq/openai/gpt-oss-120b` | 0.15 / 0.60 |
+
+Parameter count is not a price signal: the earlier small model (`qwen/qwen3.8-27b`, 0.80 / 4.00) cost *more* than the big one.
+A model replaces `SMALL_MODEL` only if it is cheaper than `BIG_MODEL` on input and output and passes the bounded live
+comparison: `python -m eval.answering_models --live MODEL_A MODEL_B` (max 12 agent runs, 3 provider calls per run, isolated
+temporary database; without `--live` it calls nothing). Prices and sources: `config.MODEL_PRICES`; retrieved 2026-10-22 from
+https://console.groq.com/docs/models and the per-model pages. Older records keep their original model and are priced by it.
+
 ## What is where
 
 | File | Job |

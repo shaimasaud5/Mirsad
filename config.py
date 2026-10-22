@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent
 load_dotenv(ROOT / ".env")
 
 # ---- Models ---------------------------------------------------------------
-SMALL_MODEL = os.getenv("SMALL_MODEL", "groq/qwen/qwen3.8-27b")
+SMALL_MODEL = os.getenv("SMALL_MODEL", "groq/openai/gpt-oss-20b")
 BIG_MODEL = os.getenv("BIG_MODEL", "groq/openai/gpt-oss-120b")
 MOCK_MODE = os.getenv("MIRSAD_MOCK", "0") == "1"
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", "500"))
@@ -79,6 +79,8 @@ PRICING_SOURCE_URL = "https://console.groq.com/docs/models"
 MODEL_PRICES = {
     "groq/openai/gpt-oss-120b": {"input": 0.15, "output": 0.60,
                                  "source": "https://console.groq.com/docs/model/openai/gpt-oss-120b"},
+    "groq/openai/gpt-oss-20b": {"input": 0.075, "output": 0.30,
+                                "source": "https://console.groq.com/docs/model/openai/gpt-oss-20b"},
     "groq/qwen/qwen3.8-27b": {"input": 0.80, "output": 4.00,
                               "source": "https://console.groq.com/docs/model/qwen/qwen3.8-27b"},
 }
