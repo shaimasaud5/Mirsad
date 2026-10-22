@@ -12,9 +12,10 @@ with Ollama, and the dashboard's costs are **simulated** (real token counts pric
 ## How it works
 
 ```
-Chat page -> LangChain agent -> Mirsad proxy -> Groq (small or big model)
-                                   |  \-> local Qwen classifier (Ollama)
-                                   \-> SQLite -> Streamlit dashboard
+Browser (signed in) -> web server (port 8501) -> LangChain agent -> Mirsad proxy (port 8000, internal) -> Groq
+        |                      |                                          |  \-> local Qwen classifier (Ollama)
+        |                      \-> SQLite: users, conversations, usage      \-> SQLite request log (owner = verified user)
+        \-> Supabase Auth (email + password)
 ```
 
 For each request the proxy does this, in order:
@@ -54,11 +55,14 @@ Edit `.env`:
 Start two terminals (venv active in both):
 
 ```bash
-uvicorn proxy.main:app --port 8000     # 1: the proxy
-streamlit run ui/app.py                # 2: chat + dashboard at http://localhost:8501
+uvicorn proxy.main:app --port 8000           # 1: the proxy (internal: only the web server may call it)
+uvicorn ui.web_server:app --port 8501        # 2: sign-in, chat and dashboard at http://localhost:8501
 ```
 
-Check http://localhost:8000/health: you want `classifier_status: ready`. After **any** `.env` change, restart the proxy.
+Sign-in needs the Supabase and internal-secret settings in `.env`; see **Accounts and permissions** below. Without them the
+web server answers with a clear setup error (it never falls back to anonymous access). The old Streamlit page is retired
+because it could not sign users in. After **any** `.env` change, restart both servers. Signed in as an administrator,
+the status pill and dashboard show `classifier_status`: you want `ready`.
 
 | Problem | Fix |
 |---|---|
@@ -66,9 +70,57 @@ Check http://localhost:8000/health: you want `classifier_status: ready`. After *
 | `classifier_status` says `unreachable` | start Ollama |
 | `No module named 'mcp'` | `pip install mcp`, restart the proxy |
 
+## Accounts and permissions
+
+Users sign up and sign in with email + password through **Supabase Auth**. Mirsad stores no passwords. Application data
+(conversations, requests, roles) stays in SQLite.
+
+**How it works**
+
+- The browser holds one opaque, `HttpOnly`, `SameSite=Lax` cookie. Supabase tokens stay on the server, encrypted at rest;
+  identity always comes from that server-side session, never from anything the browser sends.
+- Authenticated changes need a CSRF token and a same-origin request. Sessions end after 12 h idle / 7 days, and are
+  refreshed or re-checked with Supabase automatically.
+- Every conversation, message and request record is owned by the verified user. Ordinary users see only the chat: replies
+  show no route, model, token or cost details (admins see those in the dashboard). Monitoring, feedback analytics, the user
+  list and reset are admin-only, enforced on the server. Old records with no owner are admin-only.
+- The proxy on port 8000 accepts only the web server (shared `MIRSAD_INTERNAL_TOKEN`), so a browser cannot call it directly
+  or forge an owner. Keep it bound to `127.0.0.1` (the default) and never expose port 8000.
+- New accounts are always `user`. Admins are assigned only on the server (below).
+
+**`.env` values** (see `.env.example`)
+
+| Variable | Meaning |
+|---|---|
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | from Supabase: Project Settings > API (the publishable key is safe to use; no service-role key is needed) |
+| `MIRSAD_INTERNAL_TOKEN` | long random secret shared by the web server and the proxy |
+| `MIRSAD_SESSION_SECRET` | long random secret that encrypts stored session tokens |
+| `MIRSAD_PUBLIC_URL` | the address users open, e.g. `http://localhost:8501`; use `https://...` in production (cookies become `Secure`) |
+
+Generate a secret with `python -c "import secrets; print(secrets.token_urlsafe(40))"`.
+
+**Supabase dashboard settings** (Authentication)
+
+1. *URL Configuration* > **Site URL**: `http://localhost:8501` (your real HTTPS address in production).
+2. *URL Configuration* > **Redirect URLs**: add `http://localhost:8501/auth/callback` (and the production equivalent). Use exact paths, not wildcards.
+3. *Sign In / Providers* > **Email**: enabled, **Confirm email** on (recommended), minimum password length 8 or more.
+4. *Emails*: the default templates work as they are. Optional hardening: change the link to
+   `{{ .SiteURL }}/auth/callback#token_hash={{ .TokenHash }}&type=signup` (use `type=recovery` for the reset template); the page supports both shapes.
+5. Email delivery: Supabase's built-in sender only mails **members of your Supabase organization** and allows about 2 messages per hour.
+   For real users, configure a custom SMTP server.
+
+Email-link tokens arrive in the URL *fragment* (`#...`), which browsers never send to servers, so they cannot appear in server logs. The page removes them
+from the address bar immediately and posts them to the server, which verifies them with Supabase.
+
+**First administrator**
+
+1. Sign up, confirm the email, and sign in once (this creates your local user row).
+2. On the server machine run: `python -m scripts.manage_admin grant you@example.com`
+3. Reload the page. Other commands: `list`, `revoke EMAIL` (the last admin cannot be revoked). Nothing in the browser can grant this role.
+
 ## Demo (3 minutes)
 
-1. Dashboard: **Reset data**.
+1. Dashboard (admin): **Reset data**.
 2. Chat: **Simple task** -> should go to the small model.
 3. Chat: **Complex task** -> should go to the big model.
 4. Chat: **Loop scenario** -> `fetch_report` always fails; Mirsad blocks the agent on the 4th attempt.
@@ -89,18 +141,37 @@ priced cost versus an all-GPT-4o baseline. The two costs are equal when the task
 | `proxy/provider.py`, `proxy/credentials.py` | Groq call and API-key failover |
 | `proxy/cost.py`, `proxy/db.py`, `proxy/mock.py` | pricing, SQLite, fake model |
 | `agent/` | the LangChain agent and its tools (`list_files`, `read_file`, `calculator`, `fetch_report` which always fails) |
-| `monitoring/metrics.py`, `ui/app.py` | dashboard numbers, alerts and pages |
-| `eval/`, `tests/` | offline evaluation and 65 tests |
+| `monitoring/metrics.py`, `monitoring/feedback.py` | dashboard numbers and alerts; admin feedback analytics |
+| `ui/web_server.py`, `ui/web/index.html` | the web app: sign-in, chat with answer feedback, admin dashboard and feedback monitoring |
+| `auth/` | Supabase client, server-side sessions, roles, per-user conversation storage, answer feedback |
+| `scripts/manage_admin.py` | grant or revoke the admin role (server-side only) |
+| `ui/app.py` | retired Streamlit page (refuses to run) |
+| `eval/`, `tests/` | offline evaluation and the tests |
 | `data/files/` | sample files the agent reads |
 | `docs/diagrams.md` | flow diagrams |
 
 `MIRSAD_ROUTING_MODE` picks who routes: `rules` (keywords), `shadow` (rules decide, Qwen is only recorded),
 `local_llm` (Qwen decides, rules are the fallback).
 
+## Answer feedback
+
+Each completed answer has **Copy**, **Helpful** and **Not helpful** (with optional reason and comment). One current rating is
+kept per user and answer (a database constraint), ratings can be changed or cleared, and they are restored when a
+conversation is reopened. Feedback is stored in its own table and is never sent to the model.
+
+Admins see it under **Dashboard > User feedback**: Helpful % = Helpful / answers currently rated (unrated answers never
+count as Helpful), coverage = rated / completed answers, reasons, breakdowns by routing category and answering model (with
+sample sizes) and a list with a detail view. It uses the dashboard's time window and its own record filter, which defaults
+to **Live** so mock and legacy records do not mix into quality numbers. Ratings are opinions, not proof of accuracy.
+
+A **File used: name** label appears under an answer only when a successful `read_file` tool result in that run is exactly the
+content of that file (it says "partly read" when the 4000-character cap cut it). It is never inferred from the question or
+from the model's text, and never shows a path.
+
 ## Testing and evaluation
 
 ```bash
-pytest -q                  # 65 tests, offline
+pytest -q                  # offline
 python -m eval.run_eval    # evaluates the keyword rules and the loop guard
 ```
 
@@ -116,6 +187,9 @@ so we claim no accuracy figure for it. Cost savings come from your own runs of t
 ## Limits
 
 - Costs are simulated; they are not Groq invoices.
+- Sessions, rate limits, the loop guard and routing cache live in memory or per process: one server process only.
+- Deleting a conversation removes its messages but keeps the usage records (they are cost history).
+- Chats that were saved in a browser by the old page (localStorage) are not imported and not shown.
 - The classifier can be wrong, and it adds about 1-3 s per user message.
 - The loop guard and routing cache live in memory and reset when the proxy restarts.
 - The loop guard only catches repeats with identical input.

@@ -1,5 +1,6 @@
 """Routing modes, per-turn classification, classifier failures, loop guard and DB migration.
 All offline: the Ollama call is stubbed or served by httpx.MockTransport; answers come from the mock model."""
+import os
 import json
 import sqlite3
 
@@ -14,7 +15,7 @@ from proxy import main as pm
 from proxy.classifier import ClassifierResult
 from proxy.routing import TurnRouter
 
-client = TestClient(pm.app)
+client = TestClient(pm.app, headers={"Authorization": "Bearer " + os.environ["MIRSAD_INTERNAL_TOKEN"], "X-Mirsad-User-Id": "test-user"})
 
 
 class Stub:
@@ -223,7 +224,7 @@ def test_failures_counted_once_per_execution_and_fourth_call_is_blocked(monkeypa
         msgs += tool_turn(f"c{i}", ok=False)
     assert post(msgs).status_code == 200
     assert post(msgs).status_code == 200                 # the SAME 2 executions re-sent: still 2, not 4
-    assert pm.guard._failures["sess"][next(iter(pm.guard._failures["sess"]))] == 2
+    assert (lambda d: d[next(iter(d))])(pm.guard._failures["test-user:sess"]) == 2   # guard state is namespaced per user
     msgs += tool_turn("c2", ok=False)                    # third distinct failing execution
     r = post(msgs)
     assert r.status_code == 429 and r.json()["error"]["type"] == "loop_blocked"

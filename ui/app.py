@@ -20,7 +20,12 @@ import config
 from agent.agent import run_agent
 from monitoring import metrics
 
+# RETIRED: this page showed every request without signing in and cannot authenticate users.
+# The supported interface is the web UI:  uvicorn ui.web_server:app --port 8501
 st.set_page_config(page_title="Mirsad", page_icon="🛡️", layout="wide")
+st.error("RETIRED / متوقفة: this Streamlit page bypassed authentication. Run the web UI instead: "
+         "`uvicorn ui.web_server:app --port 8501` (see README, 'Accounts and permissions').")
+st.stop()
 
 DEMO_TASKS = {
     "Simple task": "Read sales.csv and tell me the total revenue.",

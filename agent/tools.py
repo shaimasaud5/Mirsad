@@ -13,6 +13,7 @@ from langchain.tools import tool
 import config
 
 FILES = config.AGENT_FILES_DIR
+READ_LIMIT = 4000
 
 
 @tool
@@ -30,7 +31,25 @@ def read_file(name: str) -> str:
         return f"ERROR: access to '{name}' is not allowed"
     if not path.is_file():
         return f"ERROR: file '{name}' not found. Use list_files to see available files."
-    return path.read_text(encoding="utf-8")[:4000]    # cap size to protect token limits
+    return path.read_text(encoding="utf-8")[:READ_LIMIT]    # cap size to protect token limits
+
+
+def verify_file_read(name, result, status=None) -> dict | None:
+    """Trusted provenance for the "File used" label. `result` is the content a read_file TOOL MESSAGE returned in this run.
+    Returns {"name": basename, "partial": bool} only when that content is exactly what the file in the allowed folder
+    yields; anything else (error result, unknown file, changed file, model-written text) returns None. Never a path."""
+    if status == "error" or not isinstance(name, str) or not isinstance(result, str) or result.startswith("ERROR"):
+        return None
+    try:
+        path = (FILES / name).resolve()
+        if FILES.resolve() not in path.parents or not path.is_file():
+            return None
+        text = path.read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        return None
+    if result != text[:READ_LIMIT]:
+        return None
+    return {"name": path.name, "partial": len(text) > READ_LIMIT}
 
 
 _OPS = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,

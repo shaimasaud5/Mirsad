@@ -42,6 +42,25 @@ PROVIDER_MAX_ATTEMPTS = int(os.getenv("PROVIDER_MAX_ATTEMPTS", "3"))          # 
 PROVIDER_RETRY_AFTER_MAX_S = float(os.getenv("PROVIDER_RETRY_AFTER_MAX_S", "10"))  # longest Retry-After we will wait
 PROVIDER_TIMEOUT_S = float(os.getenv("PROVIDER_TIMEOUT_S", "60"))
 
+# ---- Authentication (Supabase Auth; the app data stays in SQLite) ------------------
+def _env_clean(name: str, default: str = "") -> str:
+    """Tolerates `NAME= 'value'` style lines (stray spaces/quotes) without ever echoing the value."""
+    return os.getenv(name, default).strip().strip("'\"").strip()
+
+
+SUPABASE_URL = _env_clean("SUPABASE_URL").rstrip("/")
+SUPABASE_PUBLISHABLE_KEY = _env_clean("SUPABASE_PUBLISHABLE_KEY")
+PUBLIC_URL = _env_clean("MIRSAD_PUBLIC_URL", "http://localhost:8501").rstrip("/")   # where users open the web UI
+# Shared secret between the web server and the proxy (the browser never sees it). Without it the proxy refuses
+# every /v1 and /admin call: there is no anonymous mode.
+INTERNAL_TOKEN = _env_clean("MIRSAD_INTERNAL_TOKEN")
+# Encrypts the Supabase refresh/access tokens that are stored server-side. Not a Supabase key.
+SESSION_SECRET = _env_clean("MIRSAD_SESSION_SECRET")
+SESSION_IDLE_HOURS = float(os.getenv("MIRSAD_SESSION_IDLE_HOURS", "12"))
+SESSION_MAX_DAYS = float(os.getenv("MIRSAD_SESSION_MAX_DAYS", "7"))
+AUTH_REVALIDATE_S = float(os.getenv("MIRSAD_AUTH_REVALIDATE_S", "300"))   # re-check the user with Supabase this often
+CHAT_RATE_PER_MIN = int(os.getenv("MIRSAD_CHAT_RATE_PER_MIN", "20"))      # per user (each chat can spend model quota)
+
 # ---- Thresholds -----------------------------------------------------------
 LOOP_THRESHOLD = int(os.getenv("LOOP_THRESHOLD", "3"))
 ROUTER_THRESHOLD = int(os.getenv("ROUTER_THRESHOLD", "3"))

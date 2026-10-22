@@ -1,10 +1,11 @@
 """End-to-end tests of the HTTP proxy, offline (mock model)."""
+import os
 from fastapi.testclient import TestClient
 
 from monitoring import metrics
 from proxy.main import app
 
-client = TestClient(app)
+client = TestClient(app, headers={"Authorization": "Bearer " + os.environ["MIRSAD_INTERNAL_TOKEN"], "X-Mirsad-User-Id": "test-user"})
 
 
 def _tool_turn(cid, ok):

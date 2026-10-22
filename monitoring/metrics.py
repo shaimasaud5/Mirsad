@@ -16,11 +16,16 @@ import config
 from proxy.cost import savings_percent
 
 
-def load(db_path=None, since_minutes: float | None = None) -> pd.DataFrame:
+def load(db_path=None, since_minutes: float | None = None, user_id: str | None = None) -> pd.DataFrame:
+    """user_id=None -> every row (global/admin view); otherwise ONLY that user's rows.
+    Legacy rows (user_id NULL) are therefore visible to the global view only."""
     path = db_path or config.DB_PATH
     try:
         conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=5)
-        df = pd.read_sql_query("SELECT * FROM requests ORDER BY ts", conn)
+        if user_id is None:
+            df = pd.read_sql_query("SELECT * FROM requests ORDER BY ts", conn)
+        else:
+            df = pd.read_sql_query("SELECT * FROM requests WHERE user_id = ? ORDER BY ts", conn, params=(user_id,))
         conn.close()
     except Exception:
         return pd.DataFrame()

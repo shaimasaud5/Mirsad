@@ -32,6 +32,7 @@ from litellm import ModelResponse
 
 from proxy import classifier, cost, db, mock
 from proxy.credentials import CredentialPool
+from proxy.internal import ProxyAuthError, caller_identity, require_internal, token_valid
 from proxy.loop_guard import LoopGuard
 from proxy.provider import call_groq
 from proxy.routing import TurnRouter
@@ -55,6 +56,12 @@ async def lifespan(_app):
 app = FastAPI(title="Mirsad Proxy", lifespan=lifespan)
 
 
+@app.exception_handler(ProxyAuthError)
+async def _auth_error(_request, exc: ProxyAuthError):
+    return JSONResponse(status_code=exc.status, content={"error": {"message": exc.message, "type": exc.err_type}},
+                        headers={"WWW-Authenticate": "Bearer"} if exc.status == 401 else None)
+
+
 def _openai_error(status: int, message: str, err_type: str, headers: dict) -> JSONResponse:
     return JSONResponse(status_code=status, headers=headers,
                         content={"error": {"message": message, "type": err_type}})
@@ -72,7 +79,9 @@ def _ollama_status() -> str:
 
 
 @app.get("/health")
-def health():
+def health(request: Request):
+    if not token_valid(request):          # public callers only learn that the service is up
+        return {"status": "ok"}
     return {"status": "ok", "mock_mode": config.MOCK_MODE,
             "execution": "mock" if config.MOCK_MODE else "live",
             "routing_mode": config.ROUTING_MODE, "classifier_model": config.CLASSIFIER_MODEL,
@@ -82,13 +91,16 @@ def health():
 
 
 @app.get("/v1/models")
-def models():
+def models(request: Request):
+    require_internal(request)
     return {"object": "list", "data": [{"id": "mirsad-auto", "object": "model"}]}
 
 
 @app.post("/admin/reset")
-def reset():
-    """Clears logged data, loop counters and cached turn classifications (handy before a demo)."""
+def reset(request: Request):
+    """Clears logged data, loop counters and cached turn classifications (handy before a demo).
+    Internal only: the web server exposes it to admins, never to ordinary users."""
+    require_internal(request)
     db.clear(conn)
     guard.reset()
     router.reset()
@@ -109,20 +121,26 @@ def _routing_fields(d) -> dict:
 @app.post("/v1/chat/completions")
 async def chat_completions(request: Request, x_session_id: str | None = Header(default=None),
                            x_turn_id: str | None = Header(default=None)):
+    # ---- 0. Authenticate the caller (internal token) and take the verified user id ----------
+    require_internal(request)
+    user_id, conversation_id = caller_identity(request)
+
     # ---- 1. Receive ------------------------------------------------------
     start = time.perf_counter()
     body = await request.json()
     messages = body.get("messages", [])
     session_id = x_session_id or "no-session"
+    skey = f"{user_id}:{session_id}"      # loop counters and turn cache are per user: one user can never touch another's
     request_id = "req_" + uuid.uuid4().hex[:8]
     row = {"request_id": request_id, "ts": time.time(), "session_id": session_id,
+           "user_id": user_id, "conversation_id": conversation_id,
            "input_tokens": 0, "output_tokens": 0, "actual_cost": 0.0,
            "baseline_cost": 0.0, "est_saved_cost": 0.0, "has_tool_calls": 0}
 
     # ---- 2. Loop guard (before any classification: a blocked task spends nothing) ----
-    verdict = guard.check(session_id, messages)
+    verdict = guard.check(skey, messages)
     if verdict.blocked:
-        decision = router.lookup(session_id, x_turn_id, messages) or \
+        decision = router.lookup(skey, x_turn_id, messages) or \
             router.rules_only(messages, x_turn_id, fallback_reason="blocked_before_classification")
         row.update(_routing_fields(decision))
         headers = {"X-Mirsad-Request-Id": request_id, "X-Mirsad-Route": decision.route}
@@ -140,7 +158,7 @@ async def chat_completions(request: Request, x_session_id: str | None = Header(d
             "loop_blocked", {**headers, "X-Mirsad-Status": "blocked"})
 
     # ---- 3. Route: Mirsad picks the answering model (classifier runs once per user turn) ----
-    decision = await run_in_threadpool(router.decide, session_id, x_turn_id, messages)
+    decision = await run_in_threadpool(router.decide, skey, x_turn_id, messages)
     model = decision.model
     row.update(_routing_fields(decision))
     headers = {"X-Mirsad-Request-Id": request_id, "X-Mirsad-Route": decision.route,

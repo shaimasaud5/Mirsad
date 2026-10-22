@@ -1,5 +1,6 @@
 """API-key failover with MOCKED provider responses. No network, no real credentials.
 The key values below are obviously fake strings used only to prove they never leak."""
+import os
 import logging
 
 import httpx
@@ -20,7 +21,7 @@ K_BACKUP1 = "gsk_FAKEBACKUPKEY1_unit_test_0002"
 K_BACKUP2 = "gsk_FAKEBACKUPKEY2_unit_test_0003"
 ALL_KEYS = (K_PRIMARY, K_BACKUP1, K_BACKUP2)
 
-client = TestClient(pm.app)
+client = TestClient(pm.app, headers={"Authorization": "Bearer " + os.environ["MIRSAD_INTERNAL_TOKEN"], "X-Mirsad-User-Id": "test-user"})
 REQ = httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions")
 
 

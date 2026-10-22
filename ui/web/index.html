@@ -144,23 +144,30 @@ svg.i { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none;
 .callout { border-radius: 12px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; }
 .callout b { display: block; font-weight: 600; }
 .callout small { display: block; color: var(--text-2); font-size: 13px; margin-top: 2px; }
-.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
 .badge svg.i { width: 14px; height: 14px; }
-details.steps { margin-top: 10px; font-size: 13px; }
-details.steps summary { cursor: pointer; color: var(--text-2); display: inline-flex; align-items: center; gap: 6px; list-style: none; padding: 2px 0; }
-details.steps summary::-webkit-details-marker { display: none; }
-details.steps summary svg.chev { transition: transform .15s; }
-details.steps[open] summary svg.chev { transform: rotate(90deg); }
-[dir="rtl"] details.steps summary svg.chev { transform: scaleX(-1); }
-[dir="rtl"] details.steps[open] summary svg.chev { transform: rotate(90deg); }
-.timeline { margin: 8px 0 0; padding: 0; list-style: none; border-inline-start: 2px solid var(--border); }
-.timeline li { position: relative; padding: 4px 0 10px; padding-inline-start: 16px; }
-.timeline li::before { content: ""; position: absolute; inset-inline-start: -6px; top: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border-strong); }
-.timeline li.err::before { border-color: var(--danger); }
-.timeline li.ok::before { border-color: var(--success); }
-.timeline .what { font-weight: 500; }
-.timeline pre { margin: 4px 0 0; background: var(--surface-2); border-radius: 6px; padding: 6px 8px; font: 12px/1.5 var(--mono); white-space: pre-wrap; max-height: 120px; overflow: auto; color: var(--text-2); }
+.file-chip { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; color: var(--text-2); background: var(--surface-2); border-radius: 999px; padding: 3px 10px; max-width: 100%; }
+.file-chip svg.i { width: 14px; height: 14px; }
+.file-chip bdi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.actions { display: flex; align-items: center; gap: 2px; margin-top: 8px; margin-inline-start: -6px; flex-wrap: wrap; }
+.act-btn { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-3); }
+.act-btn:hover { background: var(--hover); color: var(--text); }
+.act-btn:focus-visible, .link:focus-visible, .btn:focus-visible, .reasons input:focus-visible + span, .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.act-btn[aria-pressed="true"] { color: var(--text); background: var(--accent-soft); }
+.act-btn.ok { color: var(--success); }
+.act-note { font-size: 12px; color: var(--text-3); margin-inline-start: 6px; }
+.act-note.err { color: var(--danger); }
+.fb-panel { margin-top: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; max-width: 520px; }
+.fb-panel fieldset { border: 0; margin: 0 0 10px; padding: 0; }
+.fb-panel legend { font-size: 13px; color: var(--text-2); padding: 0; margin-bottom: 6px; }
+.reasons { display: flex; flex-wrap: wrap; gap: 6px; }
+.reasons label { cursor: pointer; }
+.reasons input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.reasons span { display: inline-block; font-size: 13px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); }
+.reasons input:checked + span { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.fb-panel textarea { width: 100%; min-height: 64px; resize: vertical; font: inherit; font-size: 14px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+.fb-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+.fb-q { white-space: pre-wrap; word-wrap: break-word; background: var(--surface-2); border-radius: 8px; padding: 8px 10px; font-size: 13px; max-height: 180px; overflow: auto; }
 .thinking { display: flex; align-items: center; gap: 10px; color: var(--text-2); font-size: 14px; }
 .dots span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); margin: 0 1px; animation: blink 1.2s infinite both; }
 .dots span:nth-child(2) { animation-delay: .2s; } .dots span:nth-child(3) { animation-delay: .4s; }
@@ -209,6 +216,32 @@ details.tech > summary { cursor: pointer; font-weight: 500; color: var(--text-2)
 .mini b { display: block; font-size: 18px; color: var(--text); font-weight: 600; }
 .muted { color: var(--text-3); font-size: 13px; }
 
+/* ---------- auth screens */
+[hidden] { display: none !important; }
+.auth-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: var(--bg); }
+.auth-top { position: fixed; top: 12px; inset-inline-end: 14px; display: flex; gap: 4px; }
+.auth-card { width: 100%; max-width: 410px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px 28px 22px; box-shadow: var(--shadow); }
+.auth-card .logo { display: block; margin: 0 auto 14px; }
+.auth-card h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; text-align: center; }
+.auth-card .sub { color: var(--text-2); font-size: 14px; text-align: center; margin: 0 0 20px; }
+.field { display: block; margin: 0 0 14px; }
+.field > span { display: block; font-size: 13px; color: var(--text-2); margin-bottom: 5px; }
+.field input { width: 100%; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+.field input:focus { outline: 2px solid var(--accent-soft); border-color: var(--border-strong); }
+.btn-primary { width: 100%; background: var(--accent); color: var(--on-accent); border-radius: 10px; padding: 11px; font-weight: 500; margin-top: 4px; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:disabled { background: var(--border-strong); cursor: default; }
+.auth-links { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 16px; }
+.link { background: none; color: var(--text-2); font-size: 13px; text-decoration: underline; cursor: pointer; }
+.link:hover { color: var(--text); }
+.form-msg { border-radius: 10px; padding: 9px 12px; font-size: 13px; margin-bottom: 14px; }
+.setup-list { margin: 8px 0 0; padding-inline-start: 18px; font-family: var(--mono); font-size: 12px; }
+.mail-ic { width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; }
+.mail-ic svg.i { width: 26px; height: 26px; }
+.role-chip { font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--text-2); }
+.user .plan { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+.menu hr { border: 0; border-top: 1px solid var(--border); margin: 8px 0; }
+
 /* ---------- responsive */
 @media (max-width: 860px) {
   .app, .app.collapsed { grid-template-columns: minmax(0, 1fr); }
@@ -244,15 +277,29 @@ details.tech > summary { cursor: pointer; font-weight: 500; color: var(--text-2)
   <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
   <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M7 11v9H4v-9Z"/><path d="M7 11l4-8a2 2 0 0 1 2 2v4h6a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.8 20H7"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M17 13V4h3v9Z"/><path d="M17 13l-4 8a2 2 0 0 1-2-2v-4H5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.2 4H17"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 9.2-9.2M17 6l3 3M14 9l2 2"/></symbol>
 </svg>
 
-<div class="app" id="app">
+<!-- Sign-in / sign-up / reset screens (shown until the server confirms a valid session) -->
+<div class="auth-wrap" id="auth" hidden>
+  <div class="auth-top">
+    <button class="icon-btn" id="auth-lang" data-i18n-title="switchLang" title="Language"><svg class="i"><use href="#i-globe"/></svg></button>
+    <button class="icon-btn" id="auth-theme" data-i18n-title="switchTheme" title="Theme"><svg class="i"><use href="#i-moon"/></svg></button>
+  </div>
+  <div class="auth-card" id="auth-card"></div>
+</div>
+
+<div class="app" id="app" hidden>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-inner">
       <div class="brand"><span class="logo" style="--s:34px" role="img" aria-label="Mirsad logo"></span><span data-i18n="brand">Mirsad</span></div>
       <button class="nav-item" id="nav-new"><svg class="i"><use href="#i-new"/></svg><span data-i18n="newChat">New chat</span></button>
-      <button class="nav-item" id="nav-dash"><svg class="i"><use href="#i-chart"/></svg><span data-i18n="dashboard">Dashboard</span></button>
+      <button class="nav-item" id="nav-dash" hidden><svg class="i"><use href="#i-chart"/></svg><span data-i18n="dashboard">Dashboard</span></button>
       <div class="section-label" data-i18n="recents">Recents</div>
       <div class="recents" id="recents"></div>
       <div class="user-wrap">
@@ -268,10 +315,13 @@ details.tech > summary { cursor: pointer; font-weight: 500; color: var(--text-2)
             <button data-theme="dark"><svg class="i"><use href="#i-moon"/></svg><span data-i18n="dark">Dark</span></button>
             <button data-theme="system"><svg class="i"><use href="#i-monitor"/></svg><span data-i18n="system">Auto</span></button>
           </div>
+          <hr>
+          <button class="nav-item" id="btn-changepw"><svg class="i"><use href="#i-key"/></svg><span data-i18n="changePassword">Change password</span></button>
+          <button class="nav-item" id="btn-logout"><svg class="i"><use href="#i-x"/></svg><span data-i18n="signOut">Sign out</span></button>
         </div>
         <button class="user" id="user-btn" aria-haspopup="menu">
-          <div class="avatar">S</div>
-          <div><div class="name" data-i18n="userName">Saud</div><div class="plan" data-i18n="userRole">Team workspace</div></div>
+          <div class="avatar" id="user-avatar">?</div>
+          <div><div class="name" id="user-name"></div><div class="plan" id="user-role"></div></div>
         </button>
       </div>
     </div>
@@ -306,7 +356,7 @@ details.tech > summary { cursor: pointer; font-weight: 500; color: var(--text-2)
     <section class="view" id="view-dash">
       <div class="dash"><div class="dash-inner">
         <div class="dash-head">
-          <h1 data-i18n="dashTitle">Monitoring</h1>
+          <h1 id="dash-title">Monitoring</h1>
           <div class="seg" id="seg-window">
             <button data-min="15" data-i18n="w15">15 min</button>
             <button data-min="60" data-i18n="w60">1 hour</button>
@@ -322,6 +372,8 @@ details.tech > summary { cursor: pointer; font-weight: 500; color: var(--text-2)
         </div>
         <div id="alerts"></div>
         <div id="dash-body"></div>
+        <div id="fb-box"></div>
+        <div id="admin-users"></div>
       </div></div>
     </section>
   </main>
@@ -346,12 +398,19 @@ const I18N = {
     sc1t: "Simple question", sc1d: "Read sales.csv and get the total revenue. Should go to the small model.",
     sc2t: "Complex analysis", sc2d: "Compare regions and plan growth. Should go to the big model.",
     sc3t: "Broken tool loop", sc3d: "A report service that keeps failing. Watch Mirsad stop it.",
-    thinking: "Mirsad is routing your request", simple: "Simple · small model", complex: "Complex · big model",
+    thinking: "Working on it", simple: "Simple · small model", complex: "Complex · big model",
     blocked: "Loop blocked", blockedSub: "A new session was started for your next message.",
-    errorTitle: "Something went wrong", stepLimit: "The agent reached its step limit",
-    vs: "vs", gpt4o: "on GPT-4o", saved: "saved", calls: n => n === 1 ? "1 model call" : `${n} model calls`,
-    mock: "Mock answer", fallback: "Rules fallback", failover: "Backup key used", classifier: "Classifier",
-    steps: n => n === 1 ? "1 agent step" : `${n} agent steps`, called: "Called", returned: "Result from",
+    errorTitle: "Something went wrong", stepLimit: "The task took too many steps",
+    stepLimitMsg: "Try splitting it into smaller questions, or ask again.",
+    err_busy: "The service is busy right now. Wait a moment, then send your message again.",
+    err_unavailable: "The assistant is temporarily unavailable. Try again in a minute. If it keeps happening, tell an administrator.",
+    err_failed: "Something went wrong while answering. Try again or rephrase your question.",
+    copyAnswer: "Copy answer", copied: "Copied", copyFailed: "Could not copy",
+    rateHelpful: "Helpful", rateNotHelpful: "Not helpful", fbSaved: "Thanks for your feedback.", fbCleared: "Feedback removed.",
+    fbWhy: "What went wrong? (optional)", fbComment: "Add a comment (optional)", fbSend: "Send", fbEdit: "Edit details", fbClose: "Close",
+    fbError: "Could not save your feedback. Try again.",
+    r_incorrect: "Incorrect information", r_incomplete: "Incomplete answer", r_misunderstood: "Misunderstood my request", r_other: "Other",
+    fileUsed: "File used", partialRead: "partly read",
     live: "Live", mockMode: "Mock mode", offline: "Proxy offline", routing: "routing",
     dashTitle: "Monitoring", w15: "15 min", w60: "1 hour", wAll: "All time",
     kAll: "All runs", kLive: "Live only", kMock: "Mock only", kLegacy: "Legacy", reset: "Reset data", resetDone: "Data cleared",
@@ -373,6 +432,37 @@ const I18N = {
     aErrors: (r, w, th) => `Error rate ${r} in the last ${w} min (threshold ${th}). Check the provider status or rate limits.`,
     aLoops: (n, w) => `${n} agent loop(s) blocked in the last ${w} min. An agent is repeating a failing tool call.`,
     mixedWarn: (m, l) => `This view includes ${m} mock and ${l} legacy request(s). Use the filter to separate them.`,
+    // accounts
+    signIn: "Sign in", signUp: "Create account", signOut: "Sign out", email: "Email", password: "Password", name: "Full name",
+    newPassword: "New password", confirmPassword: "Confirm new password", changePassword: "Change password",
+    forgot: "Forgot your password?", haveAccount: "Already have an account? Sign in", noAccount: "New to Mirsad? Create an account",
+    authTitleIn: "Welcome back", authSubIn: "Sign in to use Mirsad.",
+    authTitleUp: "Create your account", authSubUp: "Your chats and usage stay private to you.",
+    authTitleForgot: "Reset your password", authSubForgot: "Enter your email and we will send you a reset link.", sendLink: "Send reset link",
+    checkEmail: "Check your email", checkEmailUp: e => `We sent a confirmation link to ${e}. Open it to activate your account, then sign in.`,
+    checkEmailReset: "If an account exists for that email, a reset link is on its way.", resend: "Resend confirmation email", resent: "Confirmation email sent again.",
+    backToSignIn: "Back to sign in", authTitleReset: "Choose a new password", authSubReset: "Pick a new password to finish the reset.",
+    savePassword: "Save password", passwordUpdated: "Password updated.", processing: "Completing sign-in…",
+    linkInvalid: "This link is invalid or has expired. Request a new one.", pwMismatch: "The passwords do not match.", pwShort: "Use at least 8 characters.",
+    errInvalid: "Incorrect email or password.", errNotConfirmed: "Your email is not confirmed yet. Check your inbox for the link.",
+    errRate: "Too many attempts. Wait a few minutes and try again.", errGeneric: "Something went wrong. Try again.",
+    errSetup: "Server setup is incomplete. An administrator must set these values in .env and restart:", errUnavail: "The sign-in service is unreachable. Try again shortly.",
+    errWeak: "Choose a stronger password (at least 8 characters).", errDisabled: "This account is disabled.", errEmail: "Enter a valid email address.",
+    errForbidden: "You do not have access to this.", sessionExpired: "Your session ended. Sign in again.",
+    roleAdmin: "Administrator", roleUser: "User",
+    fbTitle: "User feedback", fbNote: "Helpful % = Helpful ÷ answers currently rated. Unrated answers are never counted as Helpful. Coverage = rated ÷ completed answers in the same view. Ratings are user opinions, not proof of accuracy or of routing quality.",
+    fbRated: "Rated answers", fbHelpful: "Helpful", fbNot: "Not helpful", fbPct: "Helpful %", fbCoverage: "Coverage",
+    fbCoverageSub: (r, e) => `${r} of ${e} completed answers`, fbNone: "No ratings in this view yet.", fbView: "View",
+    fbExec: "Records", fbExcluded: (m, l) => `Not shown here: ${m} mock and ${l} legacy rated answer(s). Change "Records" to include them.`,
+    fbReasons: "Reasons for Not helpful", r_not_specified: "Not specified", fbByRoute: "By routing category", fbByModel: "By answering model",
+    fbN: "Rated / answers", fbLow: "small sample", fbCauseNote: "Counts differ by traffic mix; this does not show that a model or route is the cause.",
+    fbList: "Feedback", fbDate: "Date", fbRating: "Rating", fbReason: "Reason", fbCommentCol: "Comment", fbRoute: "Route", fbCalls: "Calls",
+    fbAllRatings: "All ratings", fbAllReasons: "All reasons", fbShowing: (a, b) => `Showing ${a} of ${b}`,
+    fbDetail: "Answer detail", fbQuestion: "Question", fbAnswer: "Answer", fbUser: "User", fbSource: "Routing source", fbClassified: "Classified as",
+    fbCallsTitle: "Model calls for this answer", fbLive: "Live", fbMock: "Mock", fbLegacy: "Legacy", fbAll: "All",
+    adminUsers: "Users", uEmail: "Email", uName: "Name", uRole: "Role", uRequests: "Requests", uLast: "Last sign-in",
+    adminNote: "Roles are assigned on the server with: python -m scripts.manage_admin grant EMAIL",
+    resetConfirm: "Delete all monitoring data for every user? This cannot be undone.", sending: "Sending…",
   },
   ar: {
     brand: "مرصاد", newChat: "محادثة جديدة", dashboard: "لوحة المراقبة", recents: "الأخيرة", noRecents: "بتظهر محادثاتك هنا.",
@@ -385,12 +475,19 @@ const I18N = {
     sc1t: "سؤال بسيط", sc1d: "يقرأ ملف المبيعات ويطلع إجمالي الإيرادات. المفروض يروح للنموذج الصغير.",
     sc2t: "تحليل معقد", sc2d: "يقارن المناطق ويخطط للنمو. المفروض يروح للنموذج الكبير.",
     sc3t: "أداة عالقة في حلقة", sc3d: "خدمة تقارير تفشل كل مرة. شوف كيف مرصاد يوقفها.",
-    thinking: "مرصاد يوجّه طلبك", simple: "بسيط · نموذج صغير", complex: "معقد · نموذج كبير",
+    thinking: "جاري التجهيز", simple: "بسيط · نموذج صغير", complex: "معقد · نموذج كبير",
     blocked: "تم إيقاف الحلقة", blockedSub: "بدأت جلسة جديدة لرسالتك الجاية.",
-    errorTitle: "صار خطأ", stepLimit: "الوكيل وصل للحد الأقصى من الخطوات",
-    vs: "مقابل", gpt4o: "على GPT-4o", saved: "توفير", calls: n => n === 1 ? "استدعاء واحد للنموذج" : `${n} استدعاءات للنموذج`,
-    mock: "إجابة تجريبية", fallback: "رجع للقواعد", failover: "استُخدم المفتاح الاحتياطي", classifier: "المصنّف",
-    steps: n => n === 1 ? "خطوة واحدة للوكيل" : `${n} خطوات للوكيل`, called: "استدعى", returned: "نتيجة",
+    errorTitle: "صار خطأ", stepLimit: "المهمة احتاجت خطوات كثيرة",
+    stepLimitMsg: "جرّب تقسمها لأسئلة أصغر، أو اسأل مرة ثانية.",
+    err_busy: "الخدمة مشغولة الحين. انتظر شوي ثم أرسل رسالتك مرة ثانية.",
+    err_unavailable: "المساعد غير متاح مؤقتًا. حاول بعد دقيقة، وإذا استمرت المشكلة بلّغ المسؤول.",
+    err_failed: "صار خطأ أثناء الإجابة. حاول مرة ثانية أو أعد صياغة سؤالك.",
+    copyAnswer: "نسخ الإجابة", copied: "تم النسخ", copyFailed: "تعذّر النسخ",
+    rateHelpful: "مفيدة", rateNotHelpful: "غير مفيدة", fbSaved: "شكرًا على ملاحظتك.", fbCleared: "تم حذف التقييم.",
+    fbWhy: "وش المشكلة؟ (اختياري)", fbComment: "أضف تعليقًا (اختياري)", fbSend: "إرسال", fbEdit: "تعديل التفاصيل", fbClose: "إغلاق",
+    fbError: "تعذّر حفظ ملاحظتك. حاول مرة ثانية.",
+    r_incorrect: "معلومات غير صحيحة", r_incomplete: "إجابة ناقصة", r_misunderstood: "ما فهم طلبي", r_other: "أخرى",
+    fileUsed: "الملف المستخدم", partialRead: "قُرئ جزء منه",
     live: "مباشر", mockMode: "وضع تجريبي", offline: "مرصاد غير متصل", routing: "التوجيه",
     dashTitle: "لوحة المراقبة", w15: "١٥ دقيقة", w60: "ساعة", wAll: "الكل",
     kAll: "كل التشغيلات", kLive: "المباشر فقط", kMock: "التجريبي فقط", kLegacy: "القديمة", reset: "مسح البيانات", resetDone: "انمسحت البيانات",
@@ -412,6 +509,37 @@ const I18N = {
     aErrors: (r, w, th) => `نسبة الأخطاء ${r} في آخر ${w} دقائق (الحد ${th}). تأكد من حالة المزوّد أو حدود الاستخدام.`,
     aLoops: (n, w) => `انوقفت ${n} حلقة متكررة في آخر ${w} دقائق. فيه وكيل يكرر أداة فاشلة.`,
     mixedWarn: (m, l) => `هذا العرض فيه ${m} طلب تجريبي و${l} طلب قديم. استخدم الفلتر لفصلها.`,
+    // الحسابات
+    signIn: "تسجيل الدخول", signUp: "إنشاء حساب", signOut: "تسجيل الخروج", email: "البريد الإلكتروني", password: "كلمة المرور", name: "الاسم الكامل",
+    newPassword: "كلمة المرور الجديدة", confirmPassword: "تأكيد كلمة المرور الجديدة", changePassword: "تغيير كلمة المرور",
+    forgot: "نسيت كلمة المرور؟", haveAccount: "عندك حساب؟ سجّل دخولك", noAccount: "جديد على مرصاد؟ أنشئ حسابًا",
+    authTitleIn: "أهلًا بعودتك", authSubIn: "سجّل دخولك لاستخدام مرصاد.",
+    authTitleUp: "أنشئ حسابك", authSubUp: "محادثاتك واستخدامك يبقون خاصين فيك.",
+    authTitleForgot: "إعادة تعيين كلمة المرور", authSubForgot: "اكتب بريدك وبنرسل لك رابط إعادة التعيين.", sendLink: "أرسل رابط إعادة التعيين",
+    checkEmail: "تحقق من بريدك", checkEmailUp: e => `أرسلنا رابط التأكيد إلى ${e}. افتحه لتفعيل حسابك ثم سجّل دخولك.`,
+    checkEmailReset: "إذا كان فيه حساب بهذا البريد، فرابط إعادة التعيين في طريقه إليك.", resend: "أعد إرسال رسالة التأكيد", resent: "أرسلنا رسالة التأكيد مرة ثانية.",
+    backToSignIn: "الرجوع لتسجيل الدخول", authTitleReset: "اختر كلمة مرور جديدة", authSubReset: "اكتب كلمة مرور جديدة لإنهاء إعادة التعيين.",
+    savePassword: "حفظ كلمة المرور", passwordUpdated: "تم تحديث كلمة المرور.", processing: "جاري إكمال تسجيل الدخول…",
+    linkInvalid: "الرابط غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.", pwMismatch: "كلمتا المرور غير متطابقتين.", pwShort: "استخدم 8 أحرف على الأقل.",
+    errInvalid: "البريد أو كلمة المرور غير صحيحة.", errNotConfirmed: "بريدك لم يتأكد بعد. افتح الرابط اللي وصلك في بريدك.",
+    errRate: "محاولات كثيرة. انتظر دقائق وحاول مرة ثانية.", errGeneric: "صار خطأ. حاول مرة ثانية.",
+    errSetup: "إعداد الخادم غير مكتمل. لازم المسؤول يضبط هذي القيم في ملف .env ثم يعيد التشغيل:", errUnavail: "خدمة تسجيل الدخول غير متاحة حاليًا. حاول بعد قليل.",
+    errWeak: "اختر كلمة مرور أقوى (8 أحرف على الأقل).", errDisabled: "هذا الحساب معطّل.", errEmail: "اكتب بريدًا إلكترونيًا صحيحًا.",
+    errForbidden: "ما عندك صلاحية لهذا.", sessionExpired: "انتهت جلستك. سجّل دخولك مرة ثانية.",
+    roleAdmin: "مسؤول", roleUser: "مستخدم",
+    fbTitle: "ملاحظات المستخدمين", fbNote: "نسبة المفيدة = المفيدة ÷ الإجابات المقيَّمة حاليًا. الإجابات غير المقيَّمة لا تُحسب أبدًا كمفيدة. التغطية = المقيَّمة ÷ الإجابات المكتملة في نفس العرض. التقييمات آراء المستخدمين، وليست دليلًا على الدقة أو جودة التوجيه.",
+    fbRated: "إجابات مقيَّمة", fbHelpful: "مفيدة", fbNot: "غير مفيدة", fbPct: "نسبة المفيدة", fbCoverage: "التغطية",
+    fbCoverageSub: (r, e) => `${r} من ${e} إجابة مكتملة`, fbNone: "ما فيه تقييمات في هذا العرض للحين.", fbView: "عرض",
+    fbExec: "السجلات", fbExcluded: (m, l) => `غير ظاهرة هنا: ${m} إجابة مقيَّمة تجريبية و${l} قديمة. غيّر «السجلات» لإظهارها.`,
+    fbReasons: "أسباب «غير مفيدة»", r_not_specified: "غير محدد", fbByRoute: "حسب فئة التوجيه", fbByModel: "حسب نموذج الإجابة",
+    fbN: "مقيَّمة / إجابات", fbLow: "عينة صغيرة", fbCauseNote: "الأعداد تتأثر بتوزيع الطلبات؛ هذا لا يثبت أن النموذج أو المسار هو السبب.",
+    fbList: "الملاحظات", fbDate: "التاريخ", fbRating: "التقييم", fbReason: "السبب", fbCommentCol: "التعليق", fbRoute: "المسار", fbCalls: "الاستدعاءات",
+    fbAllRatings: "كل التقييمات", fbAllReasons: "كل الأسباب", fbShowing: (a, b) => `عرض ${a} من ${b}`,
+    fbDetail: "تفاصيل الإجابة", fbQuestion: "السؤال", fbAnswer: "الإجابة", fbUser: "المستخدم", fbSource: "مصدر التوجيه", fbClassified: "التصنيف",
+    fbCallsTitle: "استدعاءات النموذج لهذه الإجابة", fbLive: "مباشر", fbMock: "تجريبي", fbLegacy: "قديم", fbAll: "الكل",
+    adminUsers: "المستخدمون", uEmail: "البريد", uName: "الاسم", uRole: "الدور", uRequests: "الطلبات", uLast: "آخر دخول",
+    adminNote: "تُعيَّن الأدوار من الخادم بالأمر: python -m scripts.manage_admin grant EMAIL",
+    resetConfirm: "تحذف كل بيانات المراقبة لجميع المستخدمين؟ ما تقدر ترجع عنها.", sending: "جاري الإرسال…",
   },
 };
 const SCENARIOS = [
@@ -428,8 +556,10 @@ const store = {
 const state = {
   lang: (() => { try { return localStorage.getItem("mirsad.lang") || "en"; } catch (e) { return "en"; } })(),
   theme: (() => { try { return localStorage.getItem("mirsad.theme") || "system"; } catch (e) { return "system"; } })(),
-  chats: store.get("mirsad.chats", []),
+  chats: [],            // [{id, title, updated, messages?}] - loaded from the server for the signed-in user only
+  draft: null,          // a new, not-yet-saved conversation
   currentId: null,
+  user: null,           // {name, email, role} from the server session
   view: "chat",
   sending: false,
   minutes: "",
@@ -446,8 +576,45 @@ const num = v => new Intl.NumberFormat("en-US").format(Math.round(Number(v) || 0
 const ms = v => { v = Number(v) || 0; return v >= 1000 ? (v / 1000).toFixed(1) + " s" : Math.round(v) + " ms"; };
 const iso = v => "\u2066" + v + "\u2069";   // keeps "543 ms" in order inside Arabic text
 const pct = v => (Number(v) || 0).toFixed(0) + "%";
-function saveChats() { store.set("mirsad.chats", state.chats.slice(0, 50)); }
-function currentChat() { return state.chats.find(c => c.id === state.currentId) || null; }
+// Chats live on the server (per user). The browser keeps no conversation data and no tokens.
+function currentChat() { return state.currentId ? (state.chats.find(c => c.id === state.currentId) || null) : state.draft; }
+
+/* ================================================================ server API + session */
+let csrf = null, epoch = 0, checkingIdentity = false;
+async function api(path, opts = {}) {
+  const ep = epoch;          // a reply that belongs to a previous sign-in is dropped instead of being shown to the next one
+  const o = { method: "GET", credentials: "same-origin", headers: {}, ...opts };
+  if (o.body && typeof o.body !== "string") { o.body = JSON.stringify(o.body); o.headers["Content-Type"] = "application/json"; }
+  if (o.method !== "GET" && csrf) o.headers["X-CSRF-Token"] = csrf;
+  let r, data = {};
+  try { r = await fetch(path, o); } catch (e) { return { ok: false, status: 0, data: { error: "network" } }; }
+  try { data = await r.json(); } catch (e) { /* empty body */ }
+  if (ep !== epoch) return { ok: false, status: 0, data: { error: "stale" } };
+  if (r.status === 403 && data && data.error === "bad_csrf" && state.user) checkIdentity();   // another tab signed in as someone else
+  if (r.status === 401 && state.user && !path.startsWith("/api/auth/")) onSessionLost();
+  return { ok: r.ok, status: r.status, data: data || {} };
+}
+function errMsg(r) {
+  const code = (r.data && r.data.error) || "";
+  const map = { invalid_credentials: "errInvalid", email_not_confirmed: "errNotConfirmed", rate_limited: "errRate",
+    auth_unavailable: "errUnavail", weak_password: "errWeak", account_disabled: "errDisabled", invalid_email: "errEmail",
+    invalid_link: "linkInvalid", forbidden: "errForbidden", bad_csrf: "sessionExpired", not_authenticated: "sessionExpired" };
+  if (r.status === 422 && !code) return t("errEmail");
+  return t(map[code] || "errGeneric");
+}
+
+async function checkIdentity() {
+  if (!state.user || checkingIdentity) return;
+  checkingIdentity = true;
+  try {
+    const r = await api("/api/auth/session"), s = r.data || {};
+    if (r.status === 0) return;
+    if (!s.authenticated) onSessionLost();
+    else if (s.csrf_token !== csrf) { clearSessionState(); await loadSession(); }     // the browser's cookie now belongs to a different sign-in
+  } finally { checkingIdentity = false; }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkIdentity(); });
+window.addEventListener("focus", checkIdentity);
 
 /* ================================================================ theme + language */
 function resolvedTheme() {
@@ -456,9 +623,12 @@ function resolvedTheme() {
 }
 function applyTheme() {
   document.documentElement.dataset.theme = resolvedTheme();
-  $("#theme-icon").setAttribute("href", resolvedTheme() === "dark" ? "#i-sun" : "#i-moon");
+  const ic = resolvedTheme() === "dark" ? "#i-sun" : "#i-moon";
+  $("#theme-icon").setAttribute("href", ic);
+  const ai = document.querySelector("#auth-theme use"); if (ai) ai.setAttribute("href", ic);
   document.querySelectorAll("#seg-theme button").forEach(b => b.classList.toggle("on", b.dataset.theme === state.theme));
   if (state.view === "dash" && lastMetrics) renderDashboard(lastMetrics);
+  if (state.view === "dash") renderFeedback();
 }
 function setTheme(theme) { state.theme = theme; try { localStorage.setItem("mirsad.theme", theme); } catch (e) {} applyTheme(); }
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (state.theme === "system") applyTheme(); });
@@ -471,8 +641,10 @@ function applyLang() {
   document.querySelectorAll("[data-i18n-title]").forEach(el => { el.title = t(el.dataset.i18nTitle); el.setAttribute("aria-label", t(el.dataset.i18nTitle)); });
   document.querySelectorAll("#seg-lang button").forEach(b => b.classList.toggle("on", b.dataset.lang === state.lang));
   document.title = t("brand");
-  renderRecents(); renderThread(); renderStatus();
+  renderRecents(); renderThread(); renderStatus(); renderUserBox(); renderAuth();
+  if (state.user) $("#dash-title").textContent = t("dashTitle");
   if (state.view === "dash" && lastMetrics) renderDashboard(lastMetrics);
+  if (state.view === "dash") { loadAdminUsers(); renderFeedback(); }
 }
 function setLang(lang) { state.lang = lang; try { localStorage.setItem("mirsad.lang", lang); } catch (e) {} applyLang(); }
 
@@ -485,21 +657,46 @@ function toggleSidebar() {
   store.set("mirsad.sidebarCollapsed", app.classList.contains("collapsed"));
 }
 function closeMobileSidebar() { $("#app").classList.remove("mobile-open"); }
+const isAdmin = () => !!state.user && state.user.role === "admin";
 function showView(view) {
+  if (view === "dash" && !isAdmin()) view = "chat";          // the UI hides it, the server enforces it
   state.view = view;
-  $("#view-chat").classList.toggle("on", view === "chat");
-  $("#view-dash").classList.toggle("on", view === "dash");
-  $("#nav-dash").classList.toggle("active", view === "dash");
+  const dash = view === "dash";
+  $("#view-chat").classList.toggle("on", !dash);
+  $("#view-dash").classList.toggle("on", dash);
+  $("#nav-dash").classList.toggle("active", dash);
+  $("#btn-reset").hidden = !dash;
+  $("#dash-title").textContent = t("dashTitle");
+  $("#admin-users").innerHTML = ""; $("#fb-box").innerHTML = ""; fbState.sig = ""; fbState.detailId = null; fbState.detail = null;
   renderRecents();
-  if (view === "dash") loadMetrics(); else setTimeout(() => $("#input").focus(), 0);
+  if (dash) { lastMetrics = null; destroyCharts(); $("#dash-body").innerHTML = ""; $("#alerts").innerHTML = ""; loadMetrics(); loadAdminUsers(); }
+  else { clearTimeout(pollTimer); setTimeout(() => $("#input").focus(), 0); }
   closeMobileSidebar();
 }
-function newChat() { state.currentId = null; showView("chat"); renderThread(); }
-function openChat(id) { state.currentId = id; showView("chat"); renderThread(); }
-function deleteChat(id) {
-  state.chats = state.chats.filter(c => c.id !== id); saveChats();
+function newChat() { state.currentId = null; state.draft = null; showView("chat"); renderThread(); }
+async function openChat(id) {
+  state.currentId = id; showView("chat");
+  const chat = state.chats.find(c => c.id === id);
+  if (chat && !chat.messages) {
+    renderThread();
+    const r = await api("/api/conversations/" + encodeURIComponent(id));
+    if (r.ok) chat.messages = (r.data.messages || []).map(m => m.role === "user" ? { role: "user", content: m.content }
+      : { role: "assistant", id: m.id, content: m.content, status: m.status, files: m.files || [], feedback: m.feedback || null });
+    else { state.chats = state.chats.filter(c => c.id !== id); state.currentId = null; renderRecents(); }
+  }
+  renderThread();
+}
+async function deleteChat(id) {
+  const r = await api("/api/conversations/" + encodeURIComponent(id), { method: "DELETE" });
+  if (!r.ok && r.status !== 404) return;
+  state.chats = state.chats.filter(c => c.id !== id);
   if (state.currentId === id) state.currentId = null;
   renderRecents(); renderThread();
+}
+async function loadConversations() {
+  const r = await api("/api/conversations");
+  if (r.ok) state.chats = (r.data.conversations || []).map(c => ({ id: c.id, title: c.title, updated: (c.updated || 0) * 1000 }));
+  renderRecents();
 }
 function renderRecents() {
   const box = $("#recents");
@@ -514,7 +711,9 @@ function renderRecents() {
 
 /* ================================================================ status pill */
 async function loadHealth() {
-  try { state.health = (await (await fetch("/api/health")).json()).proxy; } catch (e) { state.health = null; }
+  if (!state.user) return;
+  const r = await api("/api/health");
+  state.health = r.ok ? r.data.proxy : null;
   renderStatus();
 }
 function renderStatus() {
@@ -530,35 +729,30 @@ function md(text) {
   if (window.marked && window.DOMPurify) return DOMPurify.sanitize(marked.parse(String(text || ""), { breaks: true }));
   return esc(text).replace(/\n/g, "<br>");
 }
-function badges(m) {
-  const s = m.summary || {};
-  const out = [];
-  if (m.status === "blocked") out.push(`<span class="badge tone-danger">${icon("i-stop")}${esc(t("blocked"))}</span>`);
-  else if (s.route === "simple") out.push(`<span class="badge tone-success">${icon("i-bolt")}${esc(t("simple"))}</span>`);
-  else if (s.route === "complex") out.push(`<span class="badge tone-pro">${icon("i-brain")}${esc(t("complex"))}</span>`);
-  if (s.models && s.models.length && m.status !== "blocked") out.push(`<span class="badge tone-neutral">${esc(s.models.join(", "))}</span>`);
-  if (s.calls && m.status === "ok") {
-    out.push(`<span class="badge tone-neutral">${icon("i-coin")}${money(s.actual_cost)} ${esc(t("vs"))} ${money(s.baseline_cost)} ${esc(t("gpt4o"))}</span>`);
-    if (s.saved_pct > 0) out.push(`<span class="badge tone-success">${esc(t("saved"))} ${pct(s.saved_pct)}</span>`);
-    out.push(`<span class="badge tone-neutral">${icon("i-clock")}${ms(s.latency_ms)} · ${esc(t("calls", s.calls))}</span>`);
-  }
-  if (s.execution_mode === "mock") out.push(`<span class="badge tone-warning">${icon("i-warn")}${esc(t("mock"))}</span>`);
-  if (s.route_source === "rules_fallback") out.push(`<span class="badge tone-warning" title="${esc(s.fallback_reason || "")}">${icon("i-warn")}${esc(t("fallback"))}</span>`);
-  if (s.routing_mode && s.routing_mode !== "rules" && s.llm_route) out.push(`<span class="badge tone-neutral">${esc(t("classifier"))}: ${esc(s.llm_route)}${s.classifier_ms ? " · " + ms(s.classifier_ms) : ""}</span>`);
-  if (s.failover_used) out.push(`<span class="badge tone-warning">${icon("i-key")}${esc(t("failover"))}</span>`);
-  return out.length ? `<div class="badges">${out.join("")}</div>` : "";
+const REASONS = ["incorrect", "incomplete", "misunderstood", "other"];
+function filesHtml(files) {
+  return (files || []).map(f => `<div class="file-chip">${icon("i-file")}<span>${esc(t("fileUsed"))}:</span><bdi dir="auto">${esc(f.name)}</bdi>${f.partial ? `<span>(${esc(t("partialRead"))})</span>` : ""}</div>`).join(" ");
 }
-function stepsHtml(steps) {
-  if (!steps || !steps.length) return "";
-  const items = steps.map(st => {
-    if (st.type === "tool_call") {
-      const args = Object.entries(st.args || {}).map(([k, v]) => `${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`).join(", ");
-      return `<li><span class="what">${esc(t("called"))} <code>${esc(st.tool)}</code></span>${args ? ` <span class="muted">(${esc(args)})</span>` : ""}</li>`;
-    }
-    const err = String(st.result || "").trim().toUpperCase().startsWith("ERROR");
-    return `<li class="${err ? "err" : "ok"}"><span class="what">${esc(t("returned"))} <code>${esc(st.tool)}</code></span><pre dir="auto">${esc(st.result)}</pre></li>`;
-  }).join("");
-  return `<details class="steps"><summary>${icon("i-chev", "chev")}${icon("i-tool")}${esc(t("steps", steps.length))}</summary><ul class="timeline">${items}</ul></details>`;
+function panelHtml(m) {
+  if (!m.panel) return "";
+  const d = m.draft || {};
+  return `<div class="fb-panel" role="group" aria-labelledby="fbw-${m.id}">
+    <fieldset><legend id="fbw-${m.id}">${esc(t("fbWhy"))}</legend><div class="reasons">${REASONS.map(r =>
+      `<label><input type="radio" name="reason-${m.id}" value="${r}"${d.reason === r ? " checked" : ""}><span>${esc(t("r_" + r))}</span></label>`).join("")}</div></fieldset>
+    <label class="sr-only" for="fbc-${m.id}">${esc(t("fbComment"))}</label>
+    <textarea id="fbc-${m.id}" data-fbc="${m.id}" maxlength="1000" dir="auto" placeholder="${esc(t("fbComment"))}">${esc(d.comment || "")}</textarea>
+    <div class="fb-row"><button type="button" class="btn" data-act="send" data-mid="${m.id}">${esc(t("fbSend"))}</button>
+    <button type="button" class="link" data-act="close" data-mid="${m.id}">${esc(t("fbClose"))}</button></div></div>`;
+}
+function actionsInner(m) {
+  const fb = m.feedback, id = m.id;
+  const btn = (act, ic, label, pressed, cls = "") => `<button type="button" class="act-btn ${cls}" data-act="${act}" data-mid="${id}" title="${esc(label)}" aria-label="${esc(label)}"${pressed === undefined ? "" : ` aria-pressed="${pressed}"`}>${icon(ic)}</button>`;
+  const edit = fb && fb.rating === "not_helpful" && !m.panel ? `<button type="button" class="link act-note" data-act="detail" data-mid="${id}">${esc(t("fbEdit"))}</button>` : "";
+  return `<div class="actions" role="group" aria-label="${esc(t("copyAnswer"))}">
+    ${btn("copy", m.copied ? "i-check" : "i-copy", t("copyAnswer"), undefined, m.copied ? "ok" : "")}
+    ${btn("up", "i-up", t("rateHelpful"), !!(fb && fb.rating === "helpful"))}
+    ${btn("down", "i-down", t("rateNotHelpful"), !!(fb && fb.rating === "not_helpful"))}
+    <span class="act-note${m.noteErr ? " err" : ""}" role="status" aria-live="polite">${esc(m.note || "")}</span>${edit}</div>${panelHtml(m)}`;
 }
 function messageHtml(m) {
   if (m.role === "user") return `<div class="msg user"><div class="bubble" dir="auto">${esc(m.content)}</div></div>`;
@@ -566,12 +760,87 @@ function messageHtml(m) {
   if (m.status === "blocked") {
     body = `<div class="callout tone-danger">${icon("i-stop")}<div><b>${esc(t("blocked"))}</b><small dir="auto">${esc(m.content)}</small><small>${esc(t("blockedSub"))}</small></div></div>`;
   } else if (m.status === "error" || m.status === "step_limit") {
-    body = `<div class="callout tone-warning">${icon("i-warn")}<div><b>${esc(m.status === "step_limit" ? t("stepLimit") : t("errorTitle"))}</b><small dir="auto">${esc(m.content)}</small></div></div>`;
+    const text = m.localText ? m.content : m.status === "step_limit" ? t("stepLimitMsg")
+      : t("err_" + (["busy", "unavailable", "failed"].includes(m.content) ? m.content : "failed"));
+    body = `<div class="callout tone-warning">${icon("i-warn")}<div><b>${esc(m.status === "step_limit" ? t("stepLimit") : t("errorTitle"))}</b><small dir="auto">${esc(text)}</small></div></div>`;
   } else {
     body = `<div class="answer" dir="auto">${md(m.content)}</div>`;
   }
-  return `<div class="msg bot"><span class="logo" style="--s:30px" aria-hidden="true"></span><div class="bot-body">${body}${badges(m)}${stepsHtml(m.steps)}</div></div>`;
+  const acts = m.id && m.status === "ok" ? `<div class="act-wrap" id="act-${m.id}">${actionsInner(m)}</div>` : "";
+  return `<div class="msg bot"><span class="logo" style="--s:30px" aria-hidden="true"></span><div class="bot-body">${body}${m.status === "ok" ? filesHtml(m.files) : ""}${acts}</div></div>`;
 }
+function findMsg(mid) { const chat = currentChat(); return chat && (chat.messages || []).find(x => x.id === Number(mid)); }
+function refreshActions(m, focusSel) {
+  const el = document.getElementById("act-" + m.id);
+  if (!el) return;
+  el.innerHTML = actionsInner(m);
+  const f = focusSel && el.querySelector(focusSel);
+  if (f) f.focus();
+}
+function setNote(m, text, err, kind) { m.note = text; m.noteErr = !!err; m.noteKind = kind; }
+async function copyAnswer(m) {
+  let ok = false;
+  try { await navigator.clipboard.writeText(m.content); ok = true; }
+  catch (e) {
+    try { const ta = document.createElement("textarea"); ta.value = m.content; ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select(); ok = document.execCommand("copy"); ta.remove(); } catch (e2) { ok = false; }
+  }
+  m.copied = ok; setNote(m, ok ? t("copied") : t("copyFailed"), !ok, "copy");
+  refreshActions(m, '[data-act="copy"]');
+  setTimeout(() => { m.copied = false; if (m.noteKind === "copy") setNote(m, "", false, ""); refreshActions(m); }, 1800);
+}
+async function saveFeedback(m, body, after) {
+  if (m.busy) return;
+  m.busy = true;
+  const r = await api(`/api/messages/${m.id}/feedback`, { method: "PUT", body });
+  m.busy = false;
+  if (r.status === 0 && r.data.error === "stale") return;
+  if (r.ok) { m.feedback = r.data.feedback; setNote(m, t("fbSaved"), false, "fb"); after && after(); }
+  else setNote(m, t("fbError"), true, "fb");
+}
+async function rateAnswer(m, rating) {
+  if (m.busy) return;
+  if (m.feedback && m.feedback.rating === rating) {            // pressing the active rating again removes it
+    m.busy = true;
+    const r = await api(`/api/messages/${m.id}/feedback`, { method: "DELETE" });
+    m.busy = false;
+    if (r.status === 0 && r.data.error === "stale") return;
+    if (r.ok) { m.feedback = null; m.panel = false; m.draft = {}; setNote(m, t("fbCleared"), false, "fb"); } else setNote(m, t("fbError"), true, "fb");
+    refreshActions(m, `[data-act="${rating === "helpful" ? "up" : "down"}"]`);
+    return;
+  }
+  await saveFeedback(m, { rating }, () => { m.panel = rating === "not_helpful"; m.draft = {}; });
+  refreshActions(m, m.panel ? 'input[type="radio"]' : `[data-act="${rating === "helpful" ? "up" : "down"}"]`);
+}
+async function sendDetails(m) {
+  const el = document.getElementById("act-" + m.id);
+  const checked = el && el.querySelector('input[type="radio"]:checked'), ta = el && el.querySelector("textarea");
+  const body = { rating: "not_helpful" };
+  if (checked) body.reason = checked.value;
+  if (ta && ta.value.trim()) body.comment = ta.value.trim();
+  await saveFeedback(m, body, () => { m.panel = false; });
+  refreshActions(m, m.panel ? "textarea" : '[data-act="down"]');
+}
+$("#thread-inner").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]");
+  if (!b) return;
+  const m = findMsg(b.dataset.mid);
+  if (!m) return;
+  const act = b.dataset.act;
+  if (act === "copy") copyAnswer(m);
+  else if (act === "up") rateAnswer(m, "helpful");
+  else if (act === "down") rateAnswer(m, "not_helpful");
+  else if (act === "send") sendDetails(m);
+  else if (act === "detail") { m.panel = true; m.draft = { reason: m.feedback && m.feedback.reason, comment: m.feedback && m.feedback.comment }; refreshActions(m, 'input[type="radio"], textarea'); }
+  else if (act === "close") { m.panel = false; refreshActions(m, '[data-act="down"]'); }
+});
+$("#thread-inner").addEventListener("input", e => {
+  const m = e.target.dataset && e.target.dataset.fbc && findMsg(e.target.dataset.fbc);
+  if (m) m.draft = { ...(m.draft || {}), comment: e.target.value };
+});
+$("#thread-inner").addEventListener("change", e => {
+  const m = e.target.type === "radio" && findMsg((e.target.name || "").replace("reason-", ""));
+  if (m) m.draft = { ...(m.draft || {}), reason: e.target.value };
+});
 function emptyHtml() {
   return `<div class="empty">
     <span class="logo" style="--s:104px" role="img" aria-label="Mirsad logo"></span>
@@ -586,9 +855,9 @@ function emptyHtml() {
 }
 function renderThread() {
   const chat = currentChat(), inner = $("#thread-inner");
-  if (!chat || !chat.messages.length) { inner.innerHTML = emptyHtml(); return; }
+  if (!chat || !chat.messages || !chat.messages.length) { inner.innerHTML = emptyHtml(); return; }
   inner.innerHTML = chat.messages.map(messageHtml).join("") +
-    (state.sending && state.sendingId === chat.id
+    (state.sending && state.sendingId === (chat.id || "draft")
       ? `<div class="msg bot"><span class="logo" style="--s:30px" aria-hidden="true"></span><div class="thinking">${esc(t("thinking"))}<span class="dots"><span></span><span></span><span></span></span></div></div>` : "");
   const th = $("#thread"); th.scrollTop = th.scrollHeight;
 }
@@ -596,29 +865,28 @@ async function send(text) {
   text = (text || "").trim();
   if (!text || state.sending) return;
   let chat = currentChat();
-  if (!chat) {
-    chat = { id: uid(), title: text.length > 48 ? text.slice(0, 48) + "…" : text, session_id: null, messages: [], updated: Date.now() };
-    state.chats.unshift(chat); state.currentId = chat.id;
-  }
-  // History sent to the agent: earlier user messages and successful answers only (like the old page)
-  const history = chat.messages.filter(m => m.role === "user" || m.status === "ok").map(m => ({ role: m.role, content: m.content }));
-  chat.messages.push({ role: "user", content: text }); chat.updated = Date.now(); saveChats();
-  state.sending = true; state.sendingId = chat.id; updateSendBtn();
+  if (!chat) chat = state.draft = { id: null, title: text, messages: [], updated: Date.now() };
+  if (!chat.messages) chat.messages = [];
+  // The server loads the conversation history itself (from its own database); the browser sends only the new message.
+  chat.messages.push({ role: "user", content: text }); chat.updated = Date.now();
+  state.sending = true; state.sendingId = chat.id || "draft"; updateSendBtn();
   renderRecents(); renderThread();
   let reply;
-  try {
-    const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ task: text, session_id: chat.session_id, history }) });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
-    reply = { role: "assistant", content: data.answer, status: data.status, steps: data.steps, summary: data.summary || {} };
-    chat.session_id = data.status === "blocked" ? null : data.session_id;   // a blocked session stays blocked by design
-  } catch (e) {
-    reply = { role: "assistant", content: String(e.message || e), status: "error", steps: [], summary: {} };
+  const r = await api("/api/chat", { method: "POST", body: { task: text, conversation_id: chat.id || undefined } });
+  if (r.ok) {
+    const d = r.data;
+    reply = { role: "assistant", id: d.message_id, content: d.answer, status: d.status, files: d.files || [], feedback: null };
+    if (!chat.id) {                                   // first message: the server created the conversation
+      chat.id = d.conversation_id; chat.title = text.length > 48 ? text.slice(0, 48) + "…" : text;
+      state.chats.unshift(chat); if (state.draft === chat) { state.draft = null; state.currentId = chat.id; }
+    }
+  } else {
+    const msg = r.status === 429 && (r.data.error === "rate_limited") ? t("errRate") : r.status === 503 && r.data.error === "setup_error" ? t("errSetup") + " " + (r.data.missing || []).join(", ") : errMsg(r);
+    reply = { role: "assistant", content: msg, status: "error", localText: true };
   }
-  chat.messages.push(reply); chat.updated = Date.now(); saveChats();
+  chat.messages.push(reply); chat.updated = Date.now();
   state.sending = false; state.sendingId = null; updateSendBtn();
-  renderRecents(); if (state.currentId === chat.id) renderThread();
+  renderRecents(); if (currentChat() === chat) renderThread();
 }
 function updateSendBtn() { $("#send").disabled = state.sending || !$("#input").value.trim(); }
 
@@ -626,15 +894,121 @@ function updateSendBtn() { $("#send").disabled = state.sending || !$("#input").v
 let lastMetrics = null, charts = {}, pollTimer = null;
 async function loadMetrics() {
   clearTimeout(pollTimer);
-  if (state.view !== "dash") return;
+  if (state.view !== "dash" || !state.user || !isAdmin()) return;
   const q = new URLSearchParams({ kind: state.kind }); if (state.minutes) q.set("minutes", state.minutes);
-  try {
-    const data = await (await fetch("/api/metrics?" + q)).json();
-    lastMetrics = data; state.health = data.health; renderStatus(); renderDashboard(data);
-  } catch (e) { /* keep last view */ }
-  if (!document.hidden) pollTimer = setTimeout(loadMetrics, 3000);
+  const r = await api("/api/metrics?" + q);
+  if (r.ok && state.view === "dash") {
+    lastMetrics = r.data;
+    state.health = r.data.health; renderStatus();
+    renderDashboard(r.data);
+    loadFeedback();
+  } else if (r.status === 403) { showView("chat"); return; }       // not an administrator
+  if (!document.hidden && state.user) pollTimer = setTimeout(loadMetrics, 3000);
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && state.view === "dash") loadMetrics(); });
+
+/* ---------------- admin: user feedback (same time window as the dashboard; its own record-type filter, default Live) */
+const fbState = { kind: "live", rating: "", reason: "", detailId: null, detail: null, data: null, sig: "" };
+async function loadFeedback() {
+  if (state.view !== "dash" || !isAdmin()) return;
+  const q = new URLSearchParams({ kind: fbState.kind }); if (state.minutes) q.set("minutes", state.minutes);
+  if (fbState.rating) q.set("rating", fbState.rating);
+  if (fbState.reason) q.set("reason", fbState.reason);
+  const r = await api("/api/admin/feedback?" + q);
+  if (!r.ok || state.view !== "dash") return;
+  const sig = JSON.stringify(r.data) + state.lang + resolvedTheme() + fbState.detailId;
+  if (sig === fbState.sig) return;                           // nothing changed: leave the page (and focus) alone
+  fbState.data = r.data; fbState.sig = sig; renderFeedback();
+}
+async function openFeedbackDetail(id) {
+  fbState.detailId = id; fbState.detail = null; fbState.sig = ""; renderFeedback();
+  const r = await api("/api/admin/feedback/" + encodeURIComponent(id));
+  if (fbState.detailId !== id) return;
+  fbState.detail = r.ok ? r.data : null; renderFeedback();
+}
+const fbDate = sec => sec ? new Date(sec * 1000).toLocaleString("en-GB") : "";
+const fbPct = v => v == null ? "–" : pct(v);
+function fbBreakdown(title, rows, label) {
+  if (!rows || !rows.length) return "";
+  return `<div class="panel"><h3>${esc(title)}</h3><div class="table-wrap"><table class="data"><thead><tr><th></th><th>${esc(t("fbN"))}</th><th>${esc(t("fbPct"))}</th></tr></thead><tbody>${rows.map(g =>
+    `<tr><td dir="auto">${esc(label(g.key))}</td><td><bdi>${num(g.rated)} / ${num(g.eligible)}</bdi></td><td>${fbPct(g.helpful_pct)}${g.low_sample ? ` <span class="badge tone-neutral">${esc(t("fbLow"))}</span>` : ""}</td></tr>`).join("")}</tbody></table></div></div>`;
+}
+function fbDetailHtml() {
+  if (fbState.detailId == null) return "";
+  const d = fbState.detail;
+  if (!d) return `<div class="panel" style="margin-top:12px"><div class="muted">…</div></div>`;
+  const f = d.feedback || {};
+  const calls = (d.calls || []).map(c => `<tr><td>${esc(shortTime(c.ts ? new Date(c.ts * 1000).toISOString() : ""))}</td><td>${esc(c.status)}</td><td>${esc(c.execution_mode || "")}</td><td>${esc(c.route || "")}</td><td>${esc(c.llm_route || "")}</td><td>${esc(c.route_source || "")}</td><td>${esc(String(c.model || "").split("/").pop())}</td><td>${ms(c.latency_ms)}</td></tr>`).join("");
+  return `<div class="panel" style="margin-top:12px" id="fb-detail"><div class="fb-row" style="margin:0 0 8px"><h3 style="margin:0;flex:1">${esc(t("fbDetail"))}</h3><button class="btn" data-fbclose="1">${esc(t("fbClose"))}</button></div>
+    <div class="muted">${esc(t("fbUser"))}: <bdi dir="ltr">${esc(d.user)}</bdi> · ${esc(fbDate(d.answered_at))}${(d.files || []).length ? " · " + esc(t("fileUsed")) + ": " + esc(d.files.map(x => x.name).join(", ")) : ""}</div>
+    <h3 style="margin:10px 0 4px">${esc(t("fbQuestion"))}</h3><div class="fb-q" dir="auto">${esc(d.question)}</div>
+    <h3 style="margin:10px 0 4px">${esc(t("fbAnswer"))}</h3><div class="fb-q" dir="auto">${esc(d.answer)}</div>
+    <h3 style="margin:10px 0 4px">${esc(t("fbRating"))}</h3><div>${f.rating ? `${ratingBadge(f.rating)} ${f.reason ? esc(t("r_" + f.reason)) : f.rating === "not_helpful" ? esc(t("r_not_specified")) : ""}` : "–"}${f.comment ? `<div class="fb-q" dir="auto" style="margin-top:6px">${esc(f.comment)}</div>` : ""}</div>
+    <h3 style="margin:10px 0 4px">${esc(t("fbCallsTitle"))} (${(d.calls || []).length})</h3>
+    <div class="table-wrap">${calls ? `<table class="data"><thead><tr><th>${esc(t("tTime"))}</th><th>${esc(t("tStatus"))}</th><th>${esc(t("fbExec"))}</th><th>${esc(t("tRoute"))}</th><th>${esc(t("fbClassified"))}</th><th>${esc(t("fbSource"))}</th><th>${esc(t("tModel"))}</th><th>${esc(t("tLatency"))}</th></tr></thead><tbody>${calls}</tbody></table>` : `<div class="muted">–</div>`}</div></div>`;
+}
+function ratingBadge(r) { return `<span class="badge ${r === "helpful" ? "tone-success" : "tone-warning"}">${esc(t(r === "helpful" ? "fbHelpful" : "fbNot"))}</span>`; }
+function renderFeedback() {
+  const box = $("#fb-box"), d = fbState.data;
+  if (!box || state.view !== "dash" || !d) return;
+  const active = document.activeElement && document.activeElement.id;
+  const s = d.summary, ex = d.by_execution || {};
+  const kinds = [["live", "fbLive"], ["mock", "fbMock"], ["legacy", "fbLegacy"], ["all", "fbAll"]];
+  const opt = (v, cur, label) => `<option value="${v}"${v === cur ? " selected" : ""}>${esc(label)}</option>`;
+  const excluded = fbState.kind === "live" && ((ex.mock || {}).rated || (ex.legacy || {}).rated)
+    ? `<div class="alert tone-warning">${icon("i-warn")}<span>${esc(t("fbExcluded", (ex.mock || {}).rated || 0, (ex.legacy || {}).rated || 0))}</span></div>` : "";
+  const reasons = Object.entries(d.reasons || {}).map(([k, v]) => `<tr><td>${esc(t("r_" + k))}</td><td>${num(v)}</td></tr>`).join("");
+  const rows = (d.items || []).map(i => `<tr><td>${esc(fbDate(i.rated_at))}</td><td>${ratingBadge(i.rating)}</td>
+    <td>${i.rating === "not_helpful" ? esc(t("r_" + (i.reason || "not_specified"))) : ""}</td><td class="wrap" dir="auto">${esc(i.comment || "")}</td>
+    <td>${esc(i.route === "simple" ? t("simple") : i.route === "complex" ? t("complex") : i.route || "")}<div class="muted">${esc(String(i.model || "").split("/").pop())}${i.llm_route ? " · " + esc(i.llm_route) : ""}</div></td>
+    <td>${num(i.calls)}</td><td class="wrap" dir="auto">${esc(i.question)}<div class="muted">${esc(i.answer)}</div></td>
+    <td><button class="btn" data-fbview="${i.message_id}">${esc(t("fbView"))}</button></td></tr>`).join("");
+  box.innerHTML = `<div class="panel" style="margin-top:12px">
+    <div class="fb-row" style="margin:0 0 6px;flex-wrap:wrap"><h3 style="margin:0;flex:1">${esc(t("fbTitle"))}</h3>
+      <label class="muted" for="fb-kind">${esc(t("fbExec"))}</label>
+      <select class="sel" id="fb-kind">${kinds.map(([v, k]) => opt(v, fbState.kind, t(k))).join("")}</select></div>
+    <div class="muted" style="margin-bottom:10px">${esc(t("fbNote"))}</div>${excluded}
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">${esc(t("fbRated"))}</div><div class="val"><bdi>${num(s.rated)}</bdi></div><div class="sub">${esc(t("fbCoverageSub", num(s.rated), num(s.eligible)))}</div></div>
+      <div class="kpi"><div class="lbl">${esc(t("fbHelpful"))}</div><div class="val" style="color:var(--success)"><bdi>${num(s.helpful)}</bdi></div><div class="sub">${esc(t("fbPct"))}: ${fbPct(s.helpful_pct)}</div></div>
+      <div class="kpi"><div class="lbl">${esc(t("fbNot"))}</div><div class="val"><bdi>${num(s.not_helpful)}</bdi></div><div class="sub"></div></div>
+      <div class="kpi"><div class="lbl">${esc(t("fbCoverage"))}</div><div class="val"><bdi>${fbPct(s.coverage_pct)}</bdi></div><div class="sub">${esc(t("fbCoverageSub", num(s.rated), num(s.eligible)))}</div></div></div>
+    <div class="grid2">
+      <div class="panel"><h3>${esc(t("fbReasons"))}</h3><table class="data"><tbody>${reasons}</tbody></table></div>
+      ${fbBreakdown(t("fbByRoute"), d.by_route, k => k === "simple" ? t("simple") : k === "complex" ? t("complex") : k)}
+    </div>
+    ${fbBreakdown(t("fbByModel"), d.by_model, k => String(k).split("/").pop())}<div class="muted" style="margin:6px 0 12px">${esc(t("fbCauseNote"))}</div>
+    <div class="fb-row" style="flex-wrap:wrap"><h3 style="margin:0;flex:1">${esc(t("fbList"))} <span class="muted">${esc(t("fbShowing", (d.items || []).length, d.items_total))}</span></h3>
+      <select class="sel" id="fb-rating" aria-label="${esc(t("fbRating"))}">${opt("", fbState.rating, t("fbAllRatings"))}${opt("helpful", fbState.rating, t("fbHelpful"))}${opt("not_helpful", fbState.rating, t("fbNot"))}</select>
+      <select class="sel" id="fb-reason" aria-label="${esc(t("fbReason"))}">${opt("", fbState.reason, t("fbAllReasons"))}${["incorrect", "incomplete", "misunderstood", "other", "not_specified"].map(r => opt(r, fbState.reason, t("r_" + r))).join("")}</select></div>
+    <div class="table-wrap" style="margin-top:8px">${rows ? `<table class="data"><thead><tr><th>${esc(t("fbDate"))}</th><th>${esc(t("fbRating"))}</th><th>${esc(t("fbReason"))}</th><th>${esc(t("fbCommentCol"))}</th><th>${esc(t("fbRoute"))}</th><th>${esc(t("fbCalls"))}</th><th>${esc(t("fbQuestion"))}</th><th></th></tr></thead><tbody>${rows}</tbody></table>` : `<div class="muted" style="padding:10px 0">${esc(t("fbNone"))}</div>`}</div>
+    ${fbDetailHtml()}</div>`;
+  const f = active && document.getElementById(active);
+  if (f) f.focus();
+}
+$("#fb-box").addEventListener("click", e => {
+  const v = e.target.closest("[data-fbview]"); if (v) { openFeedbackDetail(Number(v.dataset.fbview)); return; }
+  if (e.target.closest("[data-fbclose]")) { fbState.detailId = null; fbState.detail = null; fbState.sig = ""; renderFeedback(); }
+});
+$("#fb-box").addEventListener("change", e => {
+  if (e.target.id === "fb-kind") fbState.kind = e.target.value;
+  else if (e.target.id === "fb-rating") fbState.rating = e.target.value;
+  else if (e.target.id === "fb-reason") fbState.reason = e.target.value;
+  else return;
+  fbState.sig = ""; loadFeedback();
+});
+
+async function loadAdminUsers() {
+  if (!isAdmin()) return;
+  const r = await api("/api/admin/users");
+  const box = $("#admin-users");
+  if (!r.ok || state.view !== "dash") { box.innerHTML = ""; return; }
+  const rows = (r.data.users || []).map(u => `<tr><td dir="ltr">${esc(u.email)}</td><td dir="auto">${esc(u.display_name)}</td>
+    <td>${esc(u.role === "admin" ? t("roleAdmin") : t("roleUser"))}${u.disabled ? " (disabled)" : ""}</td><td>${num(u.requests)}</td>
+    <td>${esc(u.last_login_at ? new Date(u.last_login_at * 1000).toLocaleString("en-GB") : "")}</td></tr>`).join("");
+  box.innerHTML = `<div class="panel" style="margin-top:12px"><h3>${esc(t("adminUsers"))}</h3><div class="muted" style="margin-bottom:8px">${esc(t("adminNote"))}</div>
+    <div class="table-wrap"><table class="data"><thead><tr><th>${esc(t("uEmail"))}</th><th>${esc(t("uName"))}</th><th>${esc(t("uRole"))}</th><th>${esc(t("uRequests"))}</th><th>${esc(t("uLast"))}</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
 
 function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 function shortTime(iso) { if (!iso) return ""; const d = new Date(iso + (iso.endsWith("Z") ? "" : "Z")); return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }); }
@@ -650,7 +1024,7 @@ function renderDashboard(d) {
   $("#alerts").innerHTML = alerts.map(a => `<div class="alert tone-danger">${icon("i-warn")}<span>${esc(a)}</span></div>`).join("");
   const s = d.summary || {}, body = $("#dash-body");
   if (!s.total) { destroyCharts(); body.innerHTML = `<div class="panel muted" style="text-align:center;padding:40px">${esc(t("noData"))}</div>`; return; }
-  const warn = (s.mock || s.legacy) ? `<div class="alert tone-warning">${icon("i-warn")}<span>${esc(t("mixedWarn", s.mock, s.legacy))}</span></div>` : "";
+  const warn = (state.view === "dash" && (s.mock || s.legacy)) ? `<div class="alert tone-warning">${icon("i-warn")}<span>${esc(t("mixedWarn", s.mock, s.legacy))}</span></div>` : "";
   if (!body.querySelector("#kpis")) {
     body.innerHTML = `<div id="warn"></div><div class="kpis" id="kpis"></div>
       <div class="grid2">
@@ -672,6 +1046,7 @@ function renderDashboard(d) {
   $("#h-cost").textContent = t("cCost"); $("#h-route").textContent = t("cRoute");
   $("#h-lat").textContent = t("cLatency"); $("#h-tok").textContent = t("cTokens");
   $("#h-recent").textContent = t("recent"); $("#h-tech").textContent = t("tech");
+  $("#tech").hidden = state.view !== "dash";             // operator internals (credentials, fallbacks) are admin-only
   renderCharts(d);
   const rows = (d.recent || []).map(r => `<tr>
       <td>${esc(shortTime(r.time))}</td><td>${statusBadge(r.status)}</td>
@@ -739,6 +1114,155 @@ function renderCharts(d) {
       { label: t("output"), data: tok.map(x => x.output_tokens), backgroundColor: success, borderRadius: 4 } ] } });
 }
 
+/* ================================================================ accounts: sign-in, sign-up, reset */
+let healthTimer = null;
+state.authMode = null; state.authData = {};
+const mailIcon = tone => `<div class="mail-ic ${tone}">${icon("i-chat")}</div>`;
+const field = (id, label, type, attrs = "") => `<label class="field"><span>${esc(label)}</span><input id="${id}" name="${id}" type="${type}" ${attrs} required></label>`;
+const formMsg = (text, tone) => text ? `<div class="form-msg tone-${tone}" role="alert">${esc(text)}</div>` : "";
+const logoBig = `<span class="logo" style="--s:64px" role="img" aria-label="Mirsad logo"></span>`;
+
+function showAuth(mode, data = {}) {
+  state.authMode = mode; state.authData = data;
+  $("#app").hidden = true; $("#auth").hidden = false;
+  renderAuth();
+}
+function renderAuth() {
+  const mode = state.authMode; if (!mode) return;
+  const d = state.authData, card = $("#auth-card"), em = d.email || "";
+  const emailField = field("email", t("email"), "email", `autocomplete="username" dir="ltr" value="${esc(em)}"`);
+  let html = "";
+  if (mode === "setup") {
+    html = `${logoBig}<h1>Mirsad</h1>${formMsg(t("errSetup"), "warning")}<ul class="setup-list">${(d.missing || []).map(m => `<li>${esc(m)}</li>`).join("")}</ul>`;
+  } else if (mode === "processing") {
+    html = `${logoBig}<h1>${esc(t("processing"))}</h1><div class="thinking" style="justify-content:center"><span class="dots"><span></span><span></span><span></span></span></div>`;
+  } else if (mode === "signin") {
+    html = `${logoBig}<h1>${esc(t("authTitleIn"))}</h1><p class="sub">${esc(t("authSubIn"))}</p>${formMsg(d.notice, "warning")}${formMsg(d.error, "danger")}
+      <form id="f-signin" novalidate>${emailField}${field("password", t("password"), "password", 'autocomplete="current-password" dir="ltr"')}
+      <button class="btn-primary" type="submit">${esc(t("signIn"))}</button></form>
+      <div class="auth-links"><button class="link" data-go="forgot">${esc(t("forgot"))}</button><button class="link" data-go="signup">${esc(t("noAccount"))}</button></div>`;
+  } else if (mode === "signup") {
+    html = `${logoBig}<h1>${esc(t("authTitleUp"))}</h1><p class="sub">${esc(t("authSubUp"))}</p>${formMsg(d.error, "danger")}
+      <form id="f-signup" novalidate>${field("name", t("name"), "text", `autocomplete="name" maxlength="80" dir="auto" value="${esc(d.name || "")}"`)}${emailField}
+      ${field("password", t("password"), "password", 'autocomplete="new-password" minlength="8" dir="ltr"')}
+      <button class="btn-primary" type="submit">${esc(t("signUp"))}</button></form>
+      <div class="auth-links"><button class="link" data-go="signin">${esc(t("haveAccount"))}</button></div>`;
+  } else if (mode === "forgot") {
+    html = `${logoBig}<h1>${esc(t("authTitleForgot"))}</h1><p class="sub">${esc(t("authSubForgot"))}</p>${formMsg(d.error, "danger")}
+      <form id="f-forgot" novalidate>${emailField}<button class="btn-primary" type="submit">${esc(t("sendLink"))}</button></form>
+      <div class="auth-links"><button class="link" data-go="signin">${esc(t("backToSignIn"))}</button></div>`;
+  } else if (mode === "check-signup" || mode === "check-reset") {
+    const text = mode === "check-signup" ? t("checkEmailUp", em) : t("checkEmailReset");
+    html = `${mailIcon("tone-success")}<h1>${esc(t("checkEmail"))}</h1><p class="sub" dir="auto">${esc(text)}</p>${formMsg(d.notice, "warning")}${formMsg(d.ok, "success")}
+      <div class="auth-links">${mode === "check-signup" ? `<button class="link" data-resend="1">${esc(t("resend"))}</button>` : ""}<button class="link" data-go="signin">${esc(t("backToSignIn"))}</button></div>`;
+  } else if (mode === "reset") {
+    html = `${logoBig}<h1>${esc(t("authTitleReset"))}</h1><p class="sub">${esc(t("authSubReset"))}</p>${formMsg(d.error, "danger")}
+      <form id="f-reset" novalidate>${field("password", t("newPassword"), "password", 'autocomplete="new-password" minlength="8" dir="ltr"')}
+      ${field("password2", t("confirmPassword"), "password", 'autocomplete="new-password" minlength="8" dir="ltr"')}
+      <button class="btn-primary" type="submit">${esc(t("savePassword"))}</button></form>
+      ${d.fromApp ? `<div class="auth-links"><button class="link" data-cancel="1">${esc(state.lang === "ar" ? "رجوع" : "Cancel")}</button></div>` : ""}`;
+  } else if (mode === "done") {
+    html = `${mailIcon("tone-success")}<h1>${esc(t("passwordUpdated"))}</h1><button class="btn-primary" data-continue="1">OK</button>`;
+  }
+  card.innerHTML = html;
+  const first = [...card.querySelectorAll("input")].find(i => !i.value);
+  if (first) first.focus();
+}
+$("#auth-card").addEventListener("click", async e => {
+  const go = e.target.closest("[data-go]"); if (go) { showAuth(go.dataset.go, { email: ($("#email") || {}).value || state.authData.email }); return; }
+  if (e.target.closest("[data-cancel]")) { enterApp(); return; }
+  if (e.target.closest("[data-continue]")) { await loadSession(); return; }
+  if (e.target.closest("[data-resend]")) {
+    const email = state.authData.email;
+    const r = await api("/api/auth/resend", { method: "POST", body: { email } });
+    showAuth("check-signup", { email, ok: r.ok ? t("resent") : null, notice: r.ok ? null : errMsg(r) });
+  }
+});
+$("#auth-card").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target, v = n => (f.elements[n] ? f.elements[n].value : ""), email = v("email").trim();
+  const btn = f.querySelector("button[type=submit]"); if (btn) { btn.disabled = true; btn.textContent = t("sending"); }
+  if (f.id === "f-signin") {
+    const r = await api("/api/auth/login", { method: "POST", body: { email, password: v("password") } });
+    if (r.ok) { await loadSession(); return; }
+    if (r.data.error === "email_not_confirmed") { showAuth("check-signup", { email, notice: errMsg(r) }); return; }
+    showAuth("signin", { email, error: errMsg(r) });
+  } else if (f.id === "f-signup") {
+    const name = v("name").trim(), pw = v("password");
+    if (pw.length < 8) { showAuth("signup", { email, name, error: t("pwShort") }); return; }
+    const r = await api("/api/auth/signup", { method: "POST", body: { name, email, password: pw } });
+    if (r.ok && r.data.status === "confirmation_required") { showAuth("check-signup", { email }); return; }
+    if (r.ok) { await loadSession(); return; }
+    showAuth("signup", { email, name, error: errMsg(r) });
+  } else if (f.id === "f-forgot") {
+    const r = await api("/api/auth/recover", { method: "POST", body: { email } });
+    if (r.ok) showAuth("check-reset", { email }); else showAuth("forgot", { email, error: errMsg(r) });
+  } else if (f.id === "f-reset") {
+    const pw = v("password"), pw2 = v("password2"), fromApp = state.authData.fromApp;
+    if (pw.length < 8) { showAuth("reset", { fromApp, error: t("pwShort") }); return; }
+    if (pw !== pw2) { showAuth("reset", { fromApp, error: t("pwMismatch") }); return; }
+    const r = await api("/api/auth/password", { method: "POST", body: { password: pw } });
+    if (r.ok) showAuth("done"); else showAuth("reset", { fromApp, error: errMsg(r) });
+  }
+});
+
+function takeFragment() {
+  // Email links return tokens in the URL fragment (#...). Browsers never send fragments to the server, so they
+  // cannot appear in server logs. Read them once, remove them from the address bar immediately, then post them to the
+  // server, which verifies them with Supabase. They are never stored in the browser.
+  const raw = location.hash.replace(/^#/, ""); if (!raw) return null;
+  const p = new URLSearchParams(raw);
+  const out = { access_token: p.get("access_token"), refresh_token: p.get("refresh_token"), token_hash: p.get("token_hash"),
+                type: p.get("type"), error: p.get("error") || p.get("error_code") };
+  if (!(out.access_token || out.token_hash || out.error)) return null;
+  history.replaceState(null, "", location.pathname === "/auth/callback" ? "/" : location.pathname + location.search);
+  return out;
+}
+async function completeCallback(f) {
+  if (f.error || !(f.token_hash || (f.access_token && f.refresh_token))) { showAuth("signin", { error: t("linkInvalid") }); return; }
+  showAuth("processing");
+  const body = f.token_hash ? { token_hash: f.token_hash, type: f.type || "signup" } : { access_token: f.access_token, refresh_token: f.refresh_token, type: f.type || "signup" };
+  const r = await api("/api/auth/callback", { method: "POST", body });
+  if (r.ok) await loadSession(); else showAuth("signin", { error: errMsg(r) });
+}
+async function loadSession() {
+  const r = await api("/api/auth/session");
+  const s = r.data || {};
+  if (s.setup_error) { showAuth("setup", { missing: s.setup_error }); return; }
+  if (!s.authenticated) { state.user = null; csrf = null; showAuth("signin", state.authMode === "signin" ? state.authData : {}); return; }
+  csrf = s.csrf_token; state.user = s.user;
+  if (s.recovery) { showAuth("reset", {}); return; }          // opened from a reset link: a new password comes first
+  await enterApp();
+}
+function renderUserBox() {
+  if (!state.user) return;
+  const nm = state.user.name || state.user.email || "?";
+  $("#user-avatar").textContent = nm.trim().charAt(0).toUpperCase();
+  $("#user-name").textContent = nm;
+  $("#user-role").textContent = (isAdmin() ? t("roleAdmin") + " · " : "") + (state.user.email || "");
+}
+async function enterApp() {
+  state.authMode = null; $("#auth").hidden = true; $("#app").hidden = false;
+  state.chats = []; state.draft = null; state.currentId = null;
+  renderUserBox();
+  $("#nav-dash").hidden = !isAdmin();
+  await loadConversations();
+  showView("chat"); renderThread();
+  loadHealth(); clearInterval(healthTimer); healthTimer = setInterval(loadHealth, 15000);
+}
+function clearSessionState() {
+  state.user = null; csrf = null; state.chats = []; state.draft = null; state.currentId = null; state.health = null;
+  epoch++;                                     // replies still in flight for the previous sign-in are ignored
+  lastMetrics = null; clearTimeout(pollTimer); clearInterval(healthTimer); destroyCharts();
+  fbState.data = null; fbState.sig = ""; fbState.detailId = null; fbState.detail = null; fbState.rating = ""; fbState.reason = "";
+  $("#thread-inner").innerHTML = ""; $("#dash-body").innerHTML = ""; $("#admin-users").innerHTML = ""; $("#fb-box").innerHTML = "";
+}
+function onSessionLost() { clearSessionState(); showAuth("signin", { notice: t("sessionExpired") }); }
+async function logout() {
+  await api("/api/auth/logout", { method: "POST" });
+  clearSessionState(); showAuth("signin", {});
+}
+
 /* ================================================================ events */
 $("#btn-sidebar").onclick = toggleSidebar;
 $("#scrim").onclick = closeMobileSidebar;
@@ -766,12 +1290,23 @@ $("#seg-window").onclick = e => {
   state.minutes = b.dataset.min; loadMetrics();
 };
 $("#sel-kind").onchange = e => { state.kind = e.target.value; loadMetrics(); };
-$("#btn-reset").onclick = async () => { await fetch("/api/reset", { method: "POST" }); destroyCharts(); $("#dash-body").innerHTML = ""; loadMetrics(); };
+$("#btn-reset").onclick = async () => {
+  if (!isAdmin() || !confirm(t("resetConfirm"))) return;
+  await api("/api/admin/reset", { method: "POST" });
+  destroyCharts(); $("#dash-body").innerHTML = ""; loadMetrics();
+};
+$("#btn-logout").onclick = logout;
+$("#btn-changepw").onclick = () => { $("#user-menu").classList.remove("open"); showAuth("reset", { fromApp: true }); };
+$("#auth-lang").onclick = () => setLang(state.lang === "ar" ? "en" : "ar");
+$("#auth-theme").onclick = () => setTheme(resolvedTheme() === "dark" ? "light" : "dark");
 
 /* ================================================================ start */
 if (store.get("mirsad.sidebarCollapsed", false) && !isMobile()) $("#app").classList.add("collapsed");
-applyTheme(); applyLang(); loadHealth(); setInterval(loadHealth, 15000);
-input.focus();
+(async function boot() {
+  const frag = takeFragment();               // first thing: pull any email-link tokens out of the address bar
+  applyTheme(); applyLang();
+  if (frag) await completeCallback(frag); else await loadSession();
+})();
 </script>
 </body>
 </html>

@@ -53,7 +53,73 @@ NEW_COLUMNS = {
     "credential_alias": "TEXT",        # primary | backup_N (never the key); credential that answered / last tried
     "provider_attempts": "INTEGER",    # provider calls made for this request (details: provider_attempts table)
     "failover_used": "INTEGER",        # 1 when a backup credential was tried after a 401
+    "user_id": "TEXT",                 # verified owner (Supabase user id); NULL = legacy row, admin-only
+    "conversation_id": "TEXT",
 }
+
+# Application data owned by users. Role lives HERE (never in Supabase metadata, which users can edit).
+AUTH_SCHEMA = """
+CREATE TABLE IF NOT EXISTS app_users (
+    user_id       TEXT PRIMARY KEY,                       -- Supabase auth user id (verified, never from the browser)
+    email         TEXT,
+    display_name  TEXT,
+    role          TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+    disabled      INTEGER NOT NULL DEFAULT 0,
+    created_at    REAL,
+    last_login_at REAL
+);
+CREATE TABLE IF NOT EXISTS auth_sessions (
+    sid_hash      TEXT PRIMARY KEY,                       -- sha256 of the opaque cookie value
+    user_id       TEXT NOT NULL,
+    tokens_enc    BLOB NOT NULL,                          -- Fernet(JSON{access_token, refresh_token})
+    access_exp    REAL,
+    last_verified REAL,
+    csrf_token    TEXT NOT NULL,
+    recovery      INTEGER NOT NULL DEFAULT 0,             -- 1 = opened from a password-reset link
+    created_at    REAL,
+    last_seen     REAL
+);
+CREATE TABLE IF NOT EXISTS conversations (
+    id          TEXT PRIMARY KEY,
+    user_id     TEXT NOT NULL,
+    title       TEXT,
+    session_id  TEXT,                                     -- agent/proxy session (rotated after a loop block)
+    created_at  REAL,
+    updated_at  REAL
+);
+CREATE TABLE IF NOT EXISTS messages (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id TEXT NOT NULL,
+    user_id         TEXT NOT NULL,
+    role            TEXT NOT NULL,                        -- user | assistant
+    content         TEXT,
+    status          TEXT,
+    steps_json      TEXT,
+    summary_json    TEXT,
+    turn_id         TEXT,
+    ts              REAL,
+    files_json      TEXT                                  -- files PROVEN to have been read for this answer (tool-verified)
+);
+-- One current rating per user and assistant answer. Kept apart from `messages` so it can never become model history.
+CREATE TABLE IF NOT EXISTS message_feedback (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         TEXT NOT NULL,                        -- from the server-side session, never from the browser
+    conversation_id TEXT NOT NULL,
+    message_id      INTEGER NOT NULL,                     -- messages.id of the assistant answer
+    turn_id         TEXT,                                 -- links to requests.turn_id (many model calls -> one rating)
+    rating          TEXT NOT NULL CHECK (rating IN ('helpful', 'not_helpful')),
+    reason          TEXT CHECK (reason IS NULL OR reason IN ('incorrect', 'incomplete', 'misunderstood', 'other')),
+    comment         TEXT,
+    created_at      REAL,
+    updated_at      REAL,
+    UNIQUE (user_id, message_id),
+    CHECK (reason IS NULL OR rating = 'not_helpful')
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_message ON message_feedback(message_id);
+CREATE INDEX IF NOT EXISTS idx_requests_user ON requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_conv_user ON conversations(user_id, updated_at);
+CREATE INDEX IF NOT EXISTS idx_msg_conv ON messages(conversation_id, id);
+"""
 
 ATTEMPTS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS provider_attempts (
@@ -75,14 +141,41 @@ CREATE TABLE IF NOT EXISTS provider_attempts (
 );
 """
 
-_lock = threading.Lock()
+_lock = threading.RLock()   # shared by every writer on the process-wide connection
 
 
-def _migrate(conn: sqlite3.Connection) -> None:
+def _backup_before_migration(conn: sqlite3.Connection, path: Path, suffix: str = "pre-auth",
+                             tables: tuple[str, ...] = ("requests",)) -> None:
+    """One-time safety copy (sqlite online backup) before columns are added to a table that has data."""
+    target = path.with_name(f"{path.name}-backup-{suffix}")
+    if target.exists():
+        return
+    if not any(conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in tables):
+        return
+    dst = sqlite3.connect(target)
+    try:
+        conn.backup(dst)
+    finally:
+        dst.close()
+
+
+def _migrate_messages(conn: sqlite3.Connection, path: Path | None = None) -> None:
+    """Feedback release: messages.files_json. Additive only; a pre-feedback copy is taken first when data exists."""
+    if "files_json" in {r[1] for r in conn.execute("PRAGMA table_info(messages)")}:
+        return
+    if path is not None:
+        _backup_before_migration(conn, path, "pre-feedback", ("messages", "requests"))
+    conn.execute("ALTER TABLE messages ADD COLUMN files_json TEXT")
+    conn.commit()
+
+
+def _migrate(conn: sqlite3.Connection, path: Path | None = None) -> None:
     existing = {r[1] for r in conn.execute("PRAGMA table_info(requests)")}
-    for col, typ in NEW_COLUMNS.items():
-        if col not in existing:
-            conn.execute(f"ALTER TABLE requests ADD COLUMN {col} {typ}")
+    missing = {c: t for c, t in NEW_COLUMNS.items() if c not in existing}
+    if missing and path is not None:
+        _backup_before_migration(conn, path)
+    for col, typ in missing.items():
+        conn.execute(f"ALTER TABLE requests ADD COLUMN {col} {typ}")
     conn.commit()
 
 
@@ -93,8 +186,15 @@ def connect(path: Path | None = None) -> sqlite3.Connection:
     conn.execute("PRAGMA journal_mode=WAL")   # lets the dashboard read while we write
     conn.execute(SCHEMA)
     conn.execute(ATTEMPTS_SCHEMA)
-    _migrate(conn)
+    _migrate(conn, path)
+    _premigrate_messages(conn, path)         # old `messages` table: add files_json BEFORE the schema script runs
+    conn.executescript(AUTH_SCHEMA)          # after _migrate: idx_requests_user needs requests.user_id
     return conn
+
+
+def _premigrate_messages(conn: sqlite3.Connection, path: Path) -> None:
+    if conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='messages'").fetchone():
+        _migrate_messages(conn, path)
 
 
 def insert_attempts(conn: sqlite3.Connection, base: dict, model: str, attempts) -> None:
