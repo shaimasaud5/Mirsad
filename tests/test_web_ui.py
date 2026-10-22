@@ -34,7 +34,7 @@ def test_admin_metrics_are_json_safe_after_a_routed_request(env):
     adm, csrf, uid = sign_in(env, "boss@example.com")
     make_admin(uid)
     assert chat(adm, csrf, "What is 2+2?").status_code == 200
-    data = adm.get("/api/metrics").json()
+    data = adm.get("/api/metrics?kind=all").json()
     json.dumps(data, allow_nan=False)                     # no NaN sneaks into the response
     assert data["summary"]["total"] >= 1 and data["recent"][0]["route"] == "simple"
     assert set(data["alert_data"]) >= {"window_min", "blocked", "error_rate"}
@@ -51,8 +51,8 @@ def test_chat_reply_has_no_technical_summary_but_admin_telemetry_is_recorded(env
     blob = json.dumps(stored) + json.dumps(r)
     for leaked in ("summary", "route", "model", "cost", "baseline", "classifier", "failover", "tokens", "steps", "gpt"):
         assert leaked not in blob.lower().replace("answer to:", "")
-    row = adm.get("/api/metrics").json()["recent"][0]                    # the admin still gets all of it
-    assert row["route"] == "simple" and row["user_id"] == uid and row["actual_cost"] <= row["baseline_cost"]
+    row = adm.get("/api/metrics?kind=all").json()["recent"][0]                    # the admin still gets all of it
+    assert row["route"] == "simple" and row["user_id"] == uid and row["usage_kind"] == "mock" and row["est_cost"] is None   # mock is never priced
     assert ws_rows(uid) == 1
 
 

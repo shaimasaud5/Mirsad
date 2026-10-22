@@ -28,7 +28,9 @@ def test_simple_request_is_routed_and_logged():
     assert r.json()["choices"][0]["message"]["content"]
     row = metrics.load().iloc[-1]
     assert row["status"] == "success" and row["route"] == "simple"
-    assert row["actual_cost"] < row["baseline_cost"]
+    assert row["token_source"] == "mock-estimate" and row["execution_mode"] == "mock"
+    assert row["est_cost_usd"] is None or row["est_cost_usd"] != row["est_cost_usd"]    # mock usage is never priced
+    assert row["model_call_ms"] > 0 and row["latency_ms"] >= row["model_call_ms"]
 
 
 def test_loop_is_blocked_with_429_and_logged():
@@ -41,4 +43,5 @@ def test_loop_is_blocked_with_429_and_logged():
     assert r.status_code == 429
     assert "Loop blocked" in r.json()["error"]["message"]
     s = metrics.summarize(metrics.load())
-    assert s["blocked"] == 1 and s["est_loop_savings"] > 0
+    assert s["calls"]["blocked"] == 1 and s["calls"]["model_calls"] == 0     # blocked: no model call, no invented saving
+    assert s["cost"]["estimated_cost"] is None

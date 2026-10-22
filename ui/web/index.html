@@ -363,10 +363,10 @@ details.tech > summary { cursor: pointer; font-weight: 500; color: var(--text-2)
             <button data-min="" class="on" data-i18n="wAll">All time</button>
           </div>
           <select class="sel" id="sel-kind" aria-label="Execution">
-            <option value="all" data-i18n="kAll">All runs</option>
-            <option value="live" data-i18n="kLive">Live only</option>
-            <option value="mock" data-i18n="kMock">Mock only</option>
+            <option value="live" data-i18n="kLive" selected>Live</option>
+            <option value="mock" data-i18n="kMock">Mock</option>
             <option value="legacy" data-i18n="kLegacy">Legacy</option>
+            <option value="all" data-i18n="kAll">All</option>
           </select>
           <button class="btn" id="btn-reset"><svg class="i"><use href="#i-refresh"/></svg><span data-i18n="reset">Reset data</span></button>
         </div>
@@ -413,25 +413,48 @@ const I18N = {
     fileUsed: "File used", partialRead: "partly read",
     live: "Live", mockMode: "Mock mode", offline: "Proxy offline", routing: "routing",
     dashTitle: "Monitoring", w15: "15 min", w60: "1 hour", wAll: "All time",
-    kAll: "All runs", kLive: "Live only", kMock: "Mock only", kLegacy: "Legacy", reset: "Reset data", resetDone: "Data cleared",
-    noData: "No requests yet. Ask the agent something from the chat.",
-    kSavings: "Savings vs all-GPT-4o", kSavingsSub: "priced estimate, not an invoice",
-    kRequests: "Requests", kRequestsSub: (s, e) => `${s} succeeded · ${e} failed`,
-    kLoops: "Loops blocked", kLoopsSub: v => `≈ ${v} saved (estimated)`,
-    kLatency: "p95 latency", kLatencySub: v => `average ${v}`,
-    cCost: "Cumulative cost: routed vs all-GPT-4o", cRoute: "Requests by route and status",
-    cLatency: "Latency by model (ms)", cTokens: "Tokens by route",
-    routed: "Routed", baseline: "All GPT-4o", avg: "Average", p95: "p95", input: "Input", output: "Output",
+    kAll: "All", kLive: "Live", kMock: "Mock", kLegacy: "Legacy", reset: "Reset data", resetDone: "Data cleared",
+    noData: "No records match this filter. Try another record type or time window, or ask the agent something from the chat.",
+    kTurns: "User turns", kTurnsSub: (c, f, b) => `${c} completed · ${f} failed · ${b} blocked`,
+    kCalls: "Model calls", kCallsSub: (s, e, a) => `${s} ok · ${e} failed · ${a} provider attempts`,
+    kCost: "Estimated inference cost", kCostSub: (p, u) => `list-price estimate, not an invoice · ${p} priced${u ? ` · ${u} without a price` : ""}`,
+    kBase: "Same usage at big-model rates", kBaseSub: (n, d) => `hypothetical, ${n} matched calls · ${d}`,
+    baseHigher: "estimated cost is higher than the baseline", baseLower: "estimated cost is lower than the baseline", baseNone: "no baseline",
+    kLoops: "Loop-blocked calls", kLoopsSub: "blocked before reaching a model; no token or cost saving is claimed",
+    kTurnLat: "Turn duration p95", kTurnLatSub: (n, nd) => `n=${n}${nd ? ` · ${nd} older turns have no duration` : ""}`,
+    cCost: "Cumulative estimated cost vs the same tokens at big-model rates (matched calls only)", cRoute: "Model-call records by route and status",
+    cLatency: "Model-call duration by model (ms, successful calls)", cTokens: "Provider-reported tokens by route",
+    routed: "Estimated cost (routed)", baseline: "Hypothetical: all at big-model rates", avg: "Average", p95: "p95", input: "Input", output: "Output",
     success: "Success", error: "Error", blockedS: "Blocked",
-    recent: "Recent requests", tTime: "Time", tStatus: "Status", tRoute: "Route", tModel: "Model",
-    tLatency: "Latency", tCost: "Cost", tReason: "Why this route",
+    recent: "Recent model-call records", tTime: "Time", tStatus: "Call status", tRoute: "Route", tModel: "Model",
+    tLatency: "Call duration", tCost: "Est. cost", tUsage: "Usage", tTokens: "Tokens in / out", tReason: "Why this route",
+    latTitle: "Latency (separate measurements)", latWhat: "Measurement", latN: "n", latAvg: "Average", latP50: "p50", latP95: "p95",
+    latCls: "Local classification (Qwen)", latCall: "Answering-model call", latAtt: "Provider attempt", latOver: "Failover overhead (earlier attempts)", latTurn: "End-to-end user turn",
+    latLow: "fewer than 20 samples: indicative only", latDerived: n => `${n} call duration(s) derived as proxy time minus classification (older records)`,
+    tokCostTitle: "Token usage and estimated cost", usageProv: "Provider-reported (calls)", usageMock: "Mock estimate (not priced)",
+    usageUnknown: "Calls with unknown usage", usageFailed: "Failed calls (usage unknown, not counted)", usageCls: "Classifier tokens",
+    usageClsNA: "not recorded", costByModel: "By model", cmModel: "Model", cmCalls: "Calls", cmRates: "USD per 1M in / out", cmCost: "Est. cost", unpriced: "price unavailable",
+    pricingNote: (v, d, u) => `Pricing ${v}, retrieved ${d}, USD per 1M tokens, source: ${u}.`,
+    currentRateNote: n => `${n} call(s) had no stored estimate and use today's configured rates (current-rate estimate).`,
+    helpTitle: "How these numbers are defined",
+    help: [
+      "A user turn is one submitted message and its whole agent run. A model call is one request to the answering model (a turn can make several, e.g. tool steps). A provider attempt is one HTTP call to the provider inside a model call (credential failover or the single rate-limit retry).",
+      "Time basis: model calls, attempts, tokens and cost use when the call was recorded; user turns use when the turn started; feedback uses when the answer was produced. Record type (Live / Mock / Legacy) and the time window apply to everything on this page.",
+      "Call status says whether the provider returned a reply. It does not prove the answer was correct or complete; that is what user feedback is for, and it is shown separately.",
+      "Costs are estimates at public list prices from the recorded token counts. They are not money charged (the free tier is not billed). Calls without provider-reported usage or without a configured price are excluded and counted, never treated as zero.",
+      "The baseline re-prices the same recorded tokens at the big model's rates. A different model could use different tokens or tool calls, so this does not prove real savings or equal answer quality. A negative difference means the estimate is higher than the baseline.",
+      "Percentiles use linear interpolation over the samples shown as n. Turn duration runs from server receipt of the message to completion, failure or blocking. Records from before this release have no turn duration, and calls without a turn or user id cannot be grouped into turns.",
+    ],
+    turnsTitle: "User turns", tuCompleted: "Completed", tuFailed: "Failed", tuBlocked: "Blocked", tuStep: "Step limit", tuUnknown: "Outcome unknown",
+    tuPerTurn: "Model calls per turn (avg)", tuUngroup: n => `${n} older call record(s) have no turn/user id and are excluded from turn metrics.`,
+    mixedNote: "This view mixes record types; latency and counts include all of them. Pick one record type for clean numbers.",
     tech: "Technical details", tRouting: "Routing and tokens",
-    mLiveMock: "Live / mock / legacy", mFallbacks: "Classifier fallbacks", mClsTime: "Classifier avg time",
-    mReused: "Classifications reused", mTokens: "Token rows: provider / estimated", mFailovers: "Key failovers",
-    mProvErr: "Provider errors", attempts: "Provider attempts (aliases only, never key values)", noAttempts: "No live provider attempts yet.",
-    aErrors: (r, w, th) => `Error rate ${r} in the last ${w} min (threshold ${th}). Check the provider status or rate limits.`,
+    mLiveMock: "Live / mock / legacy", mFallbacks: "Classifier fallbacks", mClsTime: "Classifications run",
+    mReused: "Classifications reused", mTokens: "استدعاءات أُعيدت (أكثر من محاولة)", mFailovers: "Key failovers",
+    mProvErr: "Failed model calls", attempts: "Provider attempts (aliases only, never key values)", noAttempts: "No live provider attempts yet.",
+    aErrors: (r, w, th) => `Live model-call error rate ${r} in the last ${w} min (threshold ${th}). Check the provider status or rate limits.`,
     aLoops: (n, w) => `${n} agent loop(s) blocked in the last ${w} min. An agent is repeating a failing tool call.`,
-    mixedWarn: (m, l) => `This view includes ${m} mock and ${l} legacy request(s). Use the filter to separate them.`,
+    mixedWarn: (m, l) => `This view includes ${m} mock and ${l} legacy record(s). Use the record type filter to separate them.`,
     // accounts
     signIn: "Sign in", signUp: "Create account", signOut: "Sign out", email: "Email", password: "Password", name: "Full name",
     newPassword: "New password", confirmPassword: "Confirm new password", changePassword: "Change password",
@@ -450,10 +473,10 @@ const I18N = {
     errWeak: "Choose a stronger password (at least 8 characters).", errDisabled: "This account is disabled.", errEmail: "Enter a valid email address.",
     errForbidden: "You do not have access to this.", sessionExpired: "Your session ended. Sign in again.",
     roleAdmin: "Administrator", roleUser: "User",
-    fbTitle: "User feedback", fbNote: "Helpful % = Helpful ÷ answers currently rated. Unrated answers are never counted as Helpful. Coverage = rated ÷ completed answers in the same view. Ratings are user opinions, not proof of accuracy or of routing quality.",
+    fbTitle: "User feedback", fbNote: "Helpful % = Helpful ÷ answers currently rated. Unrated answers are never counted as Helpful. Coverage = rated ÷ completed answers in the same view (same record type and time window; answers are dated by when they were produced). Ratings are user opinions, not proof of accuracy or of routing quality. Technical completion is shown separately above.",
     fbRated: "Rated answers", fbHelpful: "Helpful", fbNot: "Not helpful", fbPct: "Helpful %", fbCoverage: "Coverage",
     fbCoverageSub: (r, e) => `${r} of ${e} completed answers`, fbNone: "No ratings in this view yet.", fbView: "View",
-    fbExec: "Records", fbExcluded: (m, l) => `Not shown here: ${m} mock and ${l} legacy rated answer(s). Change "Records" to include them.`,
+    fbExec: "Records", fbExcluded: (m, l) => `Not shown here: ${m} mock and ${l} legacy rated answer(s). Change the record type filter above to include them.`,
     fbReasons: "Reasons for Not helpful", r_not_specified: "Not specified", fbByRoute: "By routing category", fbByModel: "By answering model",
     fbN: "Rated / answers", fbLow: "small sample", fbCauseNote: "Counts differ by traffic mix; this does not show that a model or route is the cause.",
     fbList: "Feedback", fbDate: "Date", fbRating: "Rating", fbReason: "Reason", fbCommentCol: "Comment", fbRoute: "Route", fbCalls: "Calls",
@@ -490,25 +513,48 @@ const I18N = {
     fileUsed: "الملف المستخدم", partialRead: "قُرئ جزء منه",
     live: "مباشر", mockMode: "وضع تجريبي", offline: "مرصاد غير متصل", routing: "التوجيه",
     dashTitle: "لوحة المراقبة", w15: "١٥ دقيقة", w60: "ساعة", wAll: "الكل",
-    kAll: "كل التشغيلات", kLive: "المباشر فقط", kMock: "التجريبي فقط", kLegacy: "القديمة", reset: "مسح البيانات", resetDone: "انمسحت البيانات",
-    noData: "ما فيه طلبات للحين. اسأل الوكيل شي من صفحة المحادثة.",
-    kSavings: "التوفير مقارنة بـ GPT-4o", kSavingsSub: "تقدير بالأسعار، مو فاتورة فعلية",
-    kRequests: "الطلبات", kRequestsSub: (s, e) => `${s} نجح · ${e} فشل`,
-    kLoops: "الحلقات الموقوفة", kLoopsSub: v => `توفير تقريبي ${v}`,
-    kLatency: "زمن الاستجابة p95", kLatencySub: v => `المتوسط ${v}`,
-    cCost: "التكلفة التراكمية: مع التوجيه مقابل GPT-4o للكل", cRoute: "الطلبات حسب المسار والحالة",
-    cLatency: "زمن الاستجابة لكل نموذج (ms)", cTokens: "التوكنز حسب المسار",
-    routed: "مع التوجيه", baseline: "GPT-4o للكل", avg: "المتوسط", p95: "p95", input: "المدخلات", output: "المخرجات",
+    kAll: "الكل", kLive: "مباشر", kMock: "تجريبي", kLegacy: "قديم", reset: "مسح البيانات", resetDone: "انمسحت البيانات",
+    noData: "ما فيه سجلات تطابق هذا الفلتر. جرّب نوع سجل أو فترة ثانية، أو اسأل الوكيل من صفحة المحادثة.",
+    kTurns: "أدوار المستخدم", kTurnsSub: (c, f, b) => `${c} اكتمل · ${f} فشل · ${b} موقوف`,
+    kCalls: "استدعاءات النموذج", kCallsSub: (s, e, a) => `${s} نجح · ${e} فشل · ${a} محاولة لدى المزوّد`,
+    kCost: "تكلفة الاستدلال التقديرية", kCostSub: (p, u) => `تقدير بسعر القائمة، مو فاتورة · ${p} مسعّر${u ? ` · ${u} بدون سعر` : ""}`,
+    kBase: "نفس الاستخدام بسعر النموذج الكبير", kBaseSub: (n, d) => `افتراضي، ${n} استدعاء مطابق · ${d}`,
+    baseHigher: "التكلفة التقديرية أعلى من خط الأساس", baseLower: "التكلفة التقديرية أقل من خط الأساس", baseNone: "لا يوجد خط أساس",
+    kLoops: "استدعاءات أوقفتها الحلقات", kLoopsSub: "أُوقفت قبل الوصول لنموذج؛ ما نحسب أي توفير في التوكنز أو التكلفة",
+    kTurnLat: "مدة الدور p95", kTurnLatSub: (n, nd) => `n=${n}${nd ? ` · ${nd} دور قديم بدون مدة` : ""}`,
+    cCost: "التكلفة التقديرية التراكمية مقابل نفس التوكنز بسعر النموذج الكبير (الاستدعاءات المطابقة فقط)", cRoute: "سجلات استدعاء النموذج حسب المسار والحالة",
+    cLatency: "مدة استدعاء النموذج لكل نموذج (ms، الاستدعاءات الناجحة)", cTokens: "التوكنز المبلّغ عنها من المزوّد حسب المسار",
+    routed: "التكلفة التقديرية (مع التوجيه)", baseline: "افتراضي: الكل بسعر النموذج الكبير", avg: "المتوسط", p95: "p95", input: "المدخلات", output: "المخرجات",
     success: "نجاح", error: "خطأ", blockedS: "موقوف",
-    recent: "آخر الطلبات", tTime: "الوقت", tStatus: "الحالة", tRoute: "المسار", tModel: "النموذج",
-    tLatency: "الزمن", tCost: "التكلفة", tReason: "سبب اختيار المسار",
+    recent: "آخر سجلات استدعاء النموذج", tTime: "الوقت", tStatus: "حالة الاستدعاء", tRoute: "المسار", tModel: "النموذج",
+    tLatency: "مدة الاستدعاء", tCost: "التكلفة التقديرية", tUsage: "الاستخدام", tTokens: "توكنز دخل / خرج", tReason: "سبب اختيار المسار",
+    latTitle: "زمن الاستجابة (قياسات منفصلة)", latWhat: "القياس", latN: "n", latAvg: "المتوسط", latP50: "p50", latP95: "p95",
+    latCls: "التصنيف المحلي (Qwen)", latCall: "استدعاء النموذج المجيب", latAtt: "محاولة لدى المزوّد", latOver: "كلفة التبديل (المحاولات السابقة)", latTurn: "دور المستخدم من البداية للنهاية",
+    latLow: "أقل من ٢٠ عينة: للاستئناس فقط", latDerived: n => `${n} مدة استدعاء محسوبة كزمن الوسيط ناقص التصنيف (سجلات قديمة)`,
+    tokCostTitle: "استخدام التوكنز والتكلفة التقديرية", usageProv: "مبلّغ من المزوّد (استدعاءات)", usageMock: "تقدير تجريبي (بدون تسعير)",
+    usageUnknown: "استدعاءات استخدامها غير معروف", usageFailed: "استدعاءات فاشلة (الاستخدام مجهول، غير محسوب)", usageCls: "توكنز المصنّف",
+    usageClsNA: "غير مسجّلة", costByModel: "حسب النموذج", cmModel: "النموذج", cmCalls: "الاستدعاءات", cmRates: "دولار لكل ١M دخل / خرج", cmCost: "التكلفة التقديرية", unpriced: "السعر غير متوفر",
+    pricingNote: (v, d, u) => `التسعير ${v}، تاريخ الجلب ${d}، بالدولار لكل مليون توكن، المصدر: ${u}.`,
+    currentRateNote: n => `${n} استدعاء ما له تقدير محفوظ ويستخدم الأسعار الحالية المهيّأة (تقدير بالسعر الحالي).`,
+    helpTitle: "كيف تُعرَّف هذه الأرقام",
+    help: [
+      "دور المستخدم هو رسالة واحدة مرسلة مع تشغيل الوكيل كامله. استدعاء النموذج هو طلب واحد للنموذج المجيب (الدور الواحد ممكن يسوي عدة استدعاءات مثل خطوات الأدوات). محاولة المزوّد هي نداء HTTP واحد للمزوّد داخل الاستدعاء (تبديل المفتاح أو إعادة واحدة عند حد المعدل).",
+      "أساس الوقت: الاستدعاءات والمحاولات والتوكنز والتكلفة بوقت تسجيل الاستدعاء؛ أدوار المستخدم بوقت بداية الدور؛ الملاحظات بوقت إنتاج الإجابة. نوع السجل (مباشر / تجريبي / قديم) والفترة يطبّقان على كل الصفحة.",
+      "حالة الاستدعاء تقول إن المزوّد رد، لكنها ما تثبت أن الإجابة صحيحة أو كاملة؛ هذا دور ملاحظات المستخدمين وتظهر منفصلة.",
+      "التكاليف تقديرات بأسعار القائمة العامة من عدد التوكنز المسجّل، وليست مبالغ مخصومة (الطبقة المجانية ما تُفوتَر). الاستدعاءات بدون استخدام مبلّغ من المزوّد أو بدون سعر مهيّأ تُستثنى وتُعدّ، ولا تُحسب صفرًا.",
+      "خط الأساس يعيد تسعير نفس التوكنز المسجّلة بأسعار النموذج الكبير. نموذج ثاني ممكن يستخدم توكنز أو أدوات مختلفة، فهذا لا يثبت توفيرًا فعليًا ولا جودة مساوية. الفرق السالب يعني أن التقدير أعلى من خط الأساس.",
+      "النسب المئوية تستخدم الاستيفاء الخطي على العينات الظاهرة في n. مدة الدور من استلام الخادم للرسالة حتى الاكتمال أو الفشل أو الإيقاف. السجلات قبل هذا الإصدار بلا مدة دور، والاستدعاءات بدون معرّف دور أو مستخدم ما تُجمع في أدوار.",
+    ],
+    turnsTitle: "أدوار المستخدم", tuCompleted: "مكتمل", tuFailed: "فشل", tuBlocked: "موقوف", tuStep: "حد الخطوات", tuUnknown: "النتيجة غير معروفة",
+    tuPerTurn: "استدعاءات النموذج لكل دور (متوسط)", tuUngroup: n => `${n} سجل استدعاء قديم بلا معرّف دور/مستخدم ومستثنى من مقاييس الأدوار.`,
+    mixedNote: "هذا العرض يخلط أنواع السجلات؛ الأزمنة والأعداد تشملها كلها. اختر نوعًا واحدًا لأرقام نظيفة.",
     tech: "تفاصيل تقنية", tRouting: "التوجيه والتوكنز",
-    mLiveMock: "مباشر / تجريبي / قديم", mFallbacks: "رجوع المصنّف للقواعد", mClsTime: "متوسط وقت المصنّف",
+    mLiveMock: "مباشر / تجريبي / قديم", mFallbacks: "رجوع المصنّف للقواعد", mClsTime: "تصنيفات منفّذة",
     mReused: "تصنيفات مُعاد استخدامها", mTokens: "توكنز من المزوّد / تقديرية", mFailovers: "تبديل المفاتيح",
-    mProvErr: "أخطاء المزوّد", attempts: "محاولات المزوّد (أسماء مستعارة فقط، بدون المفاتيح)", noAttempts: "ما فيه محاولات مباشرة للحين.",
-    aErrors: (r, w, th) => `نسبة الأخطاء ${r} في آخر ${w} دقائق (الحد ${th}). تأكد من حالة المزوّد أو حدود الاستخدام.`,
+    mProvErr: "استدعاءات نموذج فاشلة", attempts: "محاولات المزوّد (أسماء مستعارة فقط، بدون المفاتيح)", noAttempts: "ما فيه محاولات مباشرة للحين.",
+    aErrors: (r, w, th) => `نسبة أخطاء استدعاءات النموذج المباشرة ${r} في آخر ${w} دقائق (الحد ${th}). تأكد من حالة المزوّد أو حدود الاستخدام.`,
     aLoops: (n, w) => `انوقفت ${n} حلقة متكررة في آخر ${w} دقائق. فيه وكيل يكرر أداة فاشلة.`,
-    mixedWarn: (m, l) => `هذا العرض فيه ${m} طلب تجريبي و${l} طلب قديم. استخدم الفلتر لفصلها.`,
+    mixedWarn: (m, l) => `هذا العرض فيه ${m} سجل تجريبي و${l} سجل قديم. استخدم فلتر نوع السجل لفصلها.`,
     // الحسابات
     signIn: "تسجيل الدخول", signUp: "إنشاء حساب", signOut: "تسجيل الخروج", email: "البريد الإلكتروني", password: "كلمة المرور", name: "الاسم الكامل",
     newPassword: "كلمة المرور الجديدة", confirmPassword: "تأكيد كلمة المرور الجديدة", changePassword: "تغيير كلمة المرور",
@@ -530,7 +576,7 @@ const I18N = {
     fbTitle: "ملاحظات المستخدمين", fbNote: "نسبة المفيدة = المفيدة ÷ الإجابات المقيَّمة حاليًا. الإجابات غير المقيَّمة لا تُحسب أبدًا كمفيدة. التغطية = المقيَّمة ÷ الإجابات المكتملة في نفس العرض. التقييمات آراء المستخدمين، وليست دليلًا على الدقة أو جودة التوجيه.",
     fbRated: "إجابات مقيَّمة", fbHelpful: "مفيدة", fbNot: "غير مفيدة", fbPct: "نسبة المفيدة", fbCoverage: "التغطية",
     fbCoverageSub: (r, e) => `${r} من ${e} إجابة مكتملة`, fbNone: "ما فيه تقييمات في هذا العرض للحين.", fbView: "عرض",
-    fbExec: "السجلات", fbExcluded: (m, l) => `غير ظاهرة هنا: ${m} إجابة مقيَّمة تجريبية و${l} قديمة. غيّر «السجلات» لإظهارها.`,
+    fbExec: "السجلات", fbExcluded: (m, l) => `غير ظاهرة هنا: ${m} إجابة مقيَّمة تجريبية و${l} قديمة. غيّر فلتر نوع السجل أعلاه لإظهارها.`,
     fbReasons: "أسباب «غير مفيدة»", r_not_specified: "غير محدد", fbByRoute: "حسب فئة التوجيه", fbByModel: "حسب نموذج الإجابة",
     fbN: "مقيَّمة / إجابات", fbLow: "عينة صغيرة", fbCauseNote: "الأعداد تتأثر بتوزيع الطلبات؛ هذا لا يثبت أن النموذج أو المسار هو السبب.",
     fbList: "الملاحظات", fbDate: "التاريخ", fbRating: "التقييم", fbReason: "السبب", fbCommentCol: "التعليق", fbRoute: "المسار", fbCalls: "الاستدعاءات",
@@ -563,7 +609,7 @@ const state = {
   view: "chat",
   sending: false,
   minutes: "",
-  kind: "all",
+  kind: "live",
   health: null,
 };
 const $ = s => document.querySelector(s);
@@ -571,11 +617,11 @@ const t = (k, ...a) => { const v = (I18N[state.lang] || I18N.en)[k] ?? I18N.en[k
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const icon = (id, cls = "") => `<svg class="i ${cls}"><use href="#${id}"/></svg>`;
 const uid = () => Math.random().toString(36).slice(2, 10);
-const money = v => { v = Number(v) || 0; if (v === 0) return "$0"; return "$" + (v < 0.01 ? v.toFixed(5) : v.toFixed(4)); };
+const money = v => { if (v == null || isNaN(v)) return "–"; v = Number(v); if (v === 0) return "$0"; const a = Math.abs(v); return (v < 0 ? "-" : "") + "$" + (a < 0.01 ? a.toFixed(5) : a.toFixed(4)); };
 const num = v => new Intl.NumberFormat("en-US").format(Math.round(Number(v) || 0));
-const ms = v => { v = Number(v) || 0; return v >= 1000 ? (v / 1000).toFixed(1) + " s" : Math.round(v) + " ms"; };
+const ms = v => { if (v == null || isNaN(v)) return "–"; v = Number(v); return v >= 1000 ? (v / 1000).toFixed(1) + " s" : Math.round(v) + " ms"; };
 const iso = v => "\u2066" + v + "\u2069";   // keeps "543 ms" in order inside Arabic text
-const pct = v => (Number(v) || 0).toFixed(0) + "%";
+const pct = v => (v == null || isNaN(v)) ? "N/A" : Number(v).toFixed(0) + "%";
 // Chats live on the server (per user). The browser keeps no conversation data and no tokens.
 function currentChat() { return state.currentId ? (state.chats.find(c => c.id === state.currentId) || null) : state.draft; }
 
@@ -908,15 +954,15 @@ async function loadMetrics() {
 document.addEventListener("visibilitychange", () => { if (!document.hidden && state.view === "dash") loadMetrics(); });
 
 /* ---------------- admin: user feedback (same time window as the dashboard; its own record-type filter, default Live) */
-const fbState = { kind: "live", rating: "", reason: "", detailId: null, detail: null, data: null, sig: "" };
+const fbState = { rating: "", reason: "", detailId: null, detail: null, data: null, sig: "" };
 async function loadFeedback() {
   if (state.view !== "dash" || !isAdmin()) return;
-  const q = new URLSearchParams({ kind: fbState.kind }); if (state.minutes) q.set("minutes", state.minutes);
+  const q = new URLSearchParams({ kind: state.kind }); if (state.minutes) q.set("minutes", state.minutes);
   if (fbState.rating) q.set("rating", fbState.rating);
   if (fbState.reason) q.set("reason", fbState.reason);
   const r = await api("/api/admin/feedback?" + q);
   if (!r.ok || state.view !== "dash") return;
-  const sig = JSON.stringify(r.data) + state.lang + resolvedTheme() + fbState.detailId;
+  const sig = JSON.stringify(r.data) + state.kind + state.lang + resolvedTheme() + fbState.detailId;
   if (sig === fbState.sig) return;                           // nothing changed: leave the page (and focus) alone
   fbState.data = r.data; fbState.sig = sig; renderFeedback();
 }
@@ -953,9 +999,8 @@ function renderFeedback() {
   if (!box || state.view !== "dash" || !d) return;
   const active = document.activeElement && document.activeElement.id;
   const s = d.summary, ex = d.by_execution || {};
-  const kinds = [["live", "fbLive"], ["mock", "fbMock"], ["legacy", "fbLegacy"], ["all", "fbAll"]];
   const opt = (v, cur, label) => `<option value="${v}"${v === cur ? " selected" : ""}>${esc(label)}</option>`;
-  const excluded = fbState.kind === "live" && ((ex.mock || {}).rated || (ex.legacy || {}).rated)
+  const excluded = state.kind === "live" && ((ex.mock || {}).rated || (ex.legacy || {}).rated)
     ? `<div class="alert tone-warning">${icon("i-warn")}<span>${esc(t("fbExcluded", (ex.mock || {}).rated || 0, (ex.legacy || {}).rated || 0))}</span></div>` : "";
   const reasons = Object.entries(d.reasons || {}).map(([k, v]) => `<tr><td>${esc(t("r_" + k))}</td><td>${num(v)}</td></tr>`).join("");
   const rows = (d.items || []).map(i => `<tr><td>${esc(fbDate(i.rated_at))}</td><td>${ratingBadge(i.rating)}</td>
@@ -965,8 +1010,7 @@ function renderFeedback() {
     <td><button class="btn" data-fbview="${i.message_id}">${esc(t("fbView"))}</button></td></tr>`).join("");
   box.innerHTML = `<div class="panel" style="margin-top:12px">
     <div class="fb-row" style="margin:0 0 6px;flex-wrap:wrap"><h3 style="margin:0;flex:1">${esc(t("fbTitle"))}</h3>
-      <label class="muted" for="fb-kind">${esc(t("fbExec"))}</label>
-      <select class="sel" id="fb-kind">${kinds.map(([v, k]) => opt(v, fbState.kind, t(k))).join("")}</select></div>
+</div>
     <div class="muted" style="margin-bottom:10px">${esc(t("fbNote"))}</div>${excluded}
     <div class="kpis">
       <div class="kpi"><div class="lbl">${esc(t("fbRated"))}</div><div class="val"><bdi>${num(s.rated)}</bdi></div><div class="sub">${esc(t("fbCoverageSub", num(s.rated), num(s.eligible)))}</div></div>
@@ -991,8 +1035,7 @@ $("#fb-box").addEventListener("click", e => {
   if (e.target.closest("[data-fbclose]")) { fbState.detailId = null; fbState.detail = null; fbState.sig = ""; renderFeedback(); }
 });
 $("#fb-box").addEventListener("change", e => {
-  if (e.target.id === "fb-kind") fbState.kind = e.target.value;
-  else if (e.target.id === "fb-rating") fbState.rating = e.target.value;
+  if (e.target.id === "fb-rating") fbState.rating = e.target.value;
   else if (e.target.id === "fb-reason") fbState.reason = e.target.value;
   else return;
   fbState.sig = ""; loadFeedback();
@@ -1017,14 +1060,21 @@ function statusBadge(st) {
   const [tone, label] = map[st] || ["tone-neutral", st];
   return `<span class="badge ${tone}">${esc(label)}</span>`;
 }
+function latRow(label, st, extra = "") {
+  st = st || {};
+  const low = st.n && st.low_sample ? ` <span class="badge tone-neutral" title="${esc(t("latLow"))}">${esc(t("fbLow"))}</span>` : "";
+  return `<tr><td>${esc(label)}${extra}</td><td><bdi>${num(st.n || 0)}</bdi></td><td>${ms(st.avg)}</td><td>${ms(st.p50)}</td><td>${ms(st.p95)}${low}</td></tr>`;
+}
 function renderDashboard(d) {
   const al = d.alert_data || {}, alerts = [];
   if (al.error_rate != null && al.error_rate > al.error_threshold) alerts.push(t("aErrors", pct(al.error_rate * 100), al.window_min, pct(al.error_threshold * 100)));
   if (al.blocked) alerts.push(t("aLoops", al.blocked, al.window_min));
   $("#alerts").innerHTML = alerts.map(a => `<div class="alert tone-danger">${icon("i-warn")}<span>${esc(a)}</span></div>`).join("");
-  const s = d.summary || {}, body = $("#dash-body");
-  if (!s.total) { destroyCharts(); body.innerHTML = `<div class="panel muted" style="text-align:center;padding:40px">${esc(t("noData"))}</div>`; return; }
-  const warn = (state.view === "dash" && (s.mock || s.legacy)) ? `<div class="alert tone-warning">${icon("i-warn")}<span>${esc(t("mixedWarn", s.mock, s.legacy))}</span></div>` : "";
+  const s = d.summary || {}, tu = d.turns || {}, body = $("#dash-body");
+  if (!s.total && !tu.turns) { destroyCharts(); body.innerHTML = `<div class="panel muted" style="text-align:center;padding:40px">${esc(t("noData"))}</div>`; return; }
+  const c = s.calls || {}, tk = s.tokens || {}, cs = s.cost || {}, bl = cs.baseline || {}, lat = s.latency || {}, rt = s.routing || {};
+  const kinds = [s.live, s.mock, s.legacy].filter(n => n > 0).length;
+  const warn = (state.view === "dash" && kinds > 1) ? `<div class="alert tone-warning">${icon("i-warn")}<span>${esc(state.kind === "all" ? t("mixedNote") : t("mixedWarn", s.mock, s.legacy))}</span></div>` : "";
   if (!body.querySelector("#kpis")) {
     body.innerHTML = `<div id="warn"></div><div class="kpis" id="kpis"></div>
       <div class="grid2">
@@ -1033,39 +1083,77 @@ function renderDashboard(d) {
         <div class="panel"><h3 id="h-lat"></h3><div class="chart-box"><canvas id="ch-lat"></canvas></div></div>
         <div class="panel"><h3 id="h-tok"></h3><div class="chart-box"><canvas id="ch-tok"></canvas></div></div>
       </div>
+      <div class="panel"><h3 id="h-turns"></h3><div id="turns-body"></div></div>
+      <div class="panel"><h3 id="h-latt"></h3><div class="table-wrap" id="lat-body"></div></div>
+      <div class="panel"><h3 id="h-use"></h3><div id="use-body"></div></div>
       <div class="panel"><h3 id="h-recent"></h3><div class="table-wrap" id="recent"></div></div>
-      <details class="tech" id="tech"><summary id="h-tech"></summary><div id="tech-body"></div></details>`;
+      <details class="tech" id="tech"><summary id="h-tech"></summary><div id="tech-body"></div></details>
+      <details class="tech" id="help"><summary id="h-help"></summary><div id="help-body"></div></details>`;
   }
   $("#warn").innerHTML = warn;
+  const diff = bl.difference;
+  const baseLabel = bl.pct == null ? t("baseNone") : diff < 0 ? t("baseHigher") : t("baseLower");
+  const turnDur = (tu.duration || {});
   $("#kpis").innerHTML = [
-    [t("kSavings"), pct(s.savings_pct), t("kSavingsSub"), "var(--success)"],
-    [t("kRequests"), num(s.total), t("kRequestsSub", num(s.success), num(s.errors)), ""],
-    [t("kLoops"), num(s.blocked), t("kLoopsSub", iso(money(s.est_loop_savings))), s.blocked ? "var(--danger)" : ""],
-    [t("kLatency"), ms(s.p95_latency_ms), t("kLatencySub", iso(ms(s.avg_latency_ms))), ""],
+    [t("kTurns"), num(tu.turns), t("kTurnsSub", num(tu.completed), num(tu.failed), num(tu.blocked)), ""],
+    [t("kCalls"), num(c.model_calls), t("kCallsSub", num(c.succeeded), num(c.failed), c.attempts_unknown_calls ? num(c.provider_attempts) + "+" : num(c.provider_attempts)), ""],
+    [t("kCost"), cs.estimated_cost == null ? "–" : money(cs.estimated_cost), t("kCostSub", num(cs.priced_calls), num(cs.unpriced_calls)), ""],
+    [t("kBase"), bl.pct == null ? "N/A" : (bl.pct > 0 ? "+" : "") + bl.pct.toFixed(1) + "%", t("kBaseSub", num(bl.matched_calls), baseLabel), bl.pct != null && bl.pct < 0 ? "var(--warning)" : bl.pct > 0 ? "var(--success)" : ""],
+    [t("kLoops"), num(c.blocked), t("kLoopsSub"), c.blocked ? "var(--danger)" : ""],
+    [t("kTurnLat"), ms(turnDur.p95), t("kTurnLatSub", num(turnDur.n || 0), tu.no_duration_turns), ""],
   ].map(([l, v, sub, color]) => `<div class="kpi"><div class="lbl">${esc(l)}</div><div class="val" style="${color ? "color:" + color : ""}"><bdi>${esc(v)}</bdi></div><div class="sub">${esc(sub)}</div></div>`).join("");
   $("#h-cost").textContent = t("cCost"); $("#h-route").textContent = t("cRoute");
   $("#h-lat").textContent = t("cLatency"); $("#h-tok").textContent = t("cTokens");
-  $("#h-recent").textContent = t("recent"); $("#h-tech").textContent = t("tech");
+  $("#h-turns").textContent = t("turnsTitle"); $("#h-latt").textContent = t("latTitle"); $("#h-use").textContent = t("tokCostTitle");
+  $("#h-recent").textContent = t("recent"); $("#h-tech").textContent = t("tech"); $("#h-help").textContent = t("helpTitle");
   $("#tech").hidden = state.view !== "dash";             // operator internals (credentials, fallbacks) are admin-only
   renderCharts(d);
+
+  const cpt = (tu.calls_per_turn || {}).avg;
+  $("#turns-body").innerHTML = `<div class="mini">
+      <div>${esc(t("tuCompleted"))}<b>${num(tu.completed)}</b></div><div>${esc(t("tuFailed"))}<b>${num(tu.failed)}</b></div>
+      <div>${esc(t("tuBlocked"))}<b>${num(tu.blocked)}</b></div><div>${esc(t("tuStep"))}<b>${num(tu.step_limit)}</b></div>
+      <div>${esc(t("tuUnknown"))}<b>${num(tu.unknown)}</b></div><div>${esc(t("tuPerTurn"))}<b>${cpt == null ? "–" : cpt.toFixed(1)}</b></div></div>
+    ${tu.ungroupable_calls ? `<div class="muted">${esc(t("tuUngroup", tu.ungroupable_calls))}</div>` : ""}`;
+
+  $("#lat-body").innerHTML = `<table class="data"><thead><tr><th>${esc(t("latWhat"))}</th><th>${esc(t("latN"))}</th><th>${esc(t("latAvg"))}</th><th>${esc(t("latP50"))}</th><th>${esc(t("latP95"))}</th></tr></thead><tbody>
+      ${latRow(t("latCls"), lat.classification)}${latRow(t("latCall"), lat.model_call)}${latRow(t("latAtt"), lat.attempt)}
+      ${latRow(t("latOver"), lat.failover_overhead)}${latRow(t("latTurn"), tu.duration)}</tbody></table>
+    ${lat.model_call_derived ? `<div class="muted" style="margin-top:6px">${esc(t("latDerived", lat.model_call_derived))}</div>` : ""}`;
+
+  const models = (cs.by_model || []).map(m => `<tr><td>${esc(String(m.model).split("/").slice(-2).join("/"))}</td><td>${num(m.calls)}</td>
+      <td>${m.input_price == null ? esc(t("unpriced")) : `<bdi>$${m.input_price} / $${m.output_price}</bdi>`}</td><td>${m.est_cost == null ? "–" : money(m.est_cost)}</td></tr>`).join("");
+  $("#use-body").innerHTML = `<div class="mini">
+      <div>${esc(t("usageProv"))}<b>${num(tk.provider_calls)}</b><span class="muted"><bdi>${num(tk.provider_input)} in / ${num(tk.provider_output)} out</bdi></span></div>
+      <div>${esc(t("usageMock"))}<b>${num(tk.mock_calls)}</b>${tk.mock_calls ? `<span class="muted"><bdi>${num(tk.mock_input)} in / ${num(tk.mock_output)} out</bdi></span>` : ""}</div>
+      <div>${esc(t("usageUnknown"))}<b>${num(tk.unknown_calls)}</b></div>
+      <div>${esc(t("usageFailed"))}<b>${num(tk.failed_calls_unknown)}</b></div>
+      <div>${esc(t("usageCls"))}<b>–</b><span class="muted">${esc(t("usageClsNA"))}</span></div></div>
+    ${models ? `<div class="table-wrap"><table class="data"><thead><tr><th>${esc(t("cmModel"))}</th><th>${esc(t("cmCalls"))}</th><th>${esc(t("cmRates"))}</th><th>${esc(t("cmCost"))}</th></tr></thead><tbody>${models}</tbody></table></div>` : ""}
+    <div class="muted" style="margin-top:6px">${esc(t("pricingNote", cs.pricing_version, cs.retrieved, cs.source_url))}</div>
+    ${cs.current_rate_calls ? `<div class="muted">${esc(t("currentRateNote", cs.current_rate_calls))}</div>` : ""}`;
+
   const rows = (d.recent || []).map(r => `<tr>
       <td>${esc(shortTime(r.time))}</td><td>${statusBadge(r.status)}</td>
       <td>${esc(r.route === "simple" ? t("simple") : r.route === "complex" ? t("complex") : r.route || "")}</td>
-      <td>${esc(String(r.model || "").split("/").pop())}</td><td>${ms(r.latency_ms)}</td>
-      <td>${money(r.actual_cost)} <span class="muted">/ ${money(r.baseline_cost)}</span></td>
+      <td>${esc(String(r.model || "").split("/").pop())}</td><td>${ms(r.call_ms)}${r.call_ms_derived ? " *" : ""}</td>
+      <td>${esc(r.usage_kind || "")}<div class="muted"><bdi>${r.in_tok == null ? "–" : num(r.in_tok)} / ${r.out_tok == null ? "–" : num(r.out_tok)}</bdi></div></td>
+      <td>${money(r.est_cost)}</td>
       <td class="wrap" dir="auto">${esc(r.error || r.reason || "")}</td></tr>`).join("");
-  $("#recent").innerHTML = `<table class="data"><thead><tr><th>${esc(t("tTime"))}</th><th>${esc(t("tStatus"))}</th><th>${esc(t("tRoute"))}</th><th>${esc(t("tModel"))}</th><th>${esc(t("tLatency"))}</th><th>${esc(t("tCost"))}</th><th>${esc(t("tReason"))}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  $("#recent").innerHTML = `<table class="data"><thead><tr><th>${esc(t("tTime"))}</th><th>${esc(t("tStatus"))}</th><th>${esc(t("tRoute"))}</th><th>${esc(t("tModel"))}</th><th>${esc(t("tLatency"))}</th><th>${esc(t("tTokens"))}</th><th>${esc(t("tCost"))}</th><th>${esc(t("tReason"))}</th></tr></thead><tbody>${rows}</tbody></table>`;
   const att = d.attempts || [];
   $("#tech-body").innerHTML = `<div class="mini">
       <div>${esc(t("mLiveMock"))}<b>${num(s.live)} / ${num(s.mock)} / ${num(s.legacy)}</b></div>
-      <div>${esc(t("mFallbacks"))}<b>${num(s.fallbacks)}</b></div>
-      <div>${esc(t("mClsTime"))}<b>${ms(s.classifier_avg_ms)}</b></div>
-      <div>${esc(t("mReused"))}<b>${num(s.reused)}</b></div>
-      <div>${esc(t("mTokens"))}<b>${num(s.provider_token_rows)} / ${num(s.estimated_token_rows)}</b></div>
-      <div>${esc(t("mFailovers"))}<b>${num(s.credential_failovers)}</b></div>
-      <div>${esc(t("mProvErr"))}<b>${num(s.provider_errors)}</b></div>
+      <div>${esc(t("mFallbacks"))}<b>${num(rt.fallbacks)}</b></div>
+      <div>${esc(t("mClsTime"))}<b>${num(rt.classifications)}</b></div>
+      <div>${esc(t("mReused"))}<b>${num(rt.reused)}</b></div>
+      <div>${esc(t("mTokens"))}<b>${num(c.retried_calls)}</b></div>
+      <div>${esc(t("mFailovers"))}<b>${num(c.credential_failovers)}</b></div>
+      <div>${esc(t("mProvErr"))}<b>${num(c.failed)}</b></div>
     </div>
-    <div class="panel"><h3>${esc(t("attempts"))}</h3><div class="table-wrap">${att.length ? `<table class="data"><thead><tr><th>${esc(t("tTime"))}</th><th>#</th><th>key</th><th>${esc(t("tModel"))}</th><th>outcome</th><th>HTTP</th><th>${esc(t("tLatency"))}</th></tr></thead><tbody>${att.map(a => `<tr><td>${esc(shortTime(a.time))}</td><td>${esc(a.attempt_no)}</td><td>${esc(a.credential_alias)}</td><td>${esc(String(a.model || "").split("/").pop())}</td><td>${esc(a.outcome)}</td><td>${esc(a.http_status ?? "")}</td><td>${ms(a.duration_ms)}</td></tr>`).join("")}</tbody></table>` : `<div class="muted">${esc(t("noAttempts"))}</div>`}</div></div>`;
+    <div class="panel"><h3>${esc(t("attempts"))}</h3><div class="table-wrap">${att.length ? `<table class="data"><thead><tr><th>${esc(t("tTime"))}</th><th>#</th><th>key</th><th>${esc(t("tModel"))}</th><th>outcome</th><th>HTTP</th><th>${esc(t("latAtt"))}</th></tr></thead><tbody>${att.map(a => `<tr><td>${esc(shortTime(a.time))}</td><td>${esc(a.attempt_no)}</td><td>${esc(a.credential_alias)}</td><td>${esc(String(a.model || "").split("/").pop())}</td><td>${esc(a.outcome)}</td><td>${esc(a.http_status ?? "")}</td><td>${ms(a.duration_ms)}</td></tr>`).join("")}</tbody></table>` : `<div class="muted">${esc(t("noAttempts"))}</div>`}</div></div>`;
+  const helpBox = $("#help-body");
+  if (!helpBox.dataset.lang || helpBox.dataset.lang !== state.lang) { helpBox.dataset.lang = state.lang; helpBox.innerHTML = (t("help") || []).map(x => `<p class="muted" style="margin:6px 0">${esc(x)}</p>`).join(""); }
 }
 function destroyCharts() { Object.values(charts).forEach(c => c && c.destroy()); charts = {}; }
 function upsertChart(id, cfg) {
@@ -1091,8 +1179,8 @@ function renderCharts(d) {
   const cs = d.cost_series || [];
   upsertChart("ch-cost", { type: "line", options: { ...base, scales: { ...base.scales, y: { ...base.scales.y, ticks: { callback: v => money(v) } } } },
     data: { labels: cs.map(p => shortTime(p.time)), datasets: [
-      { label: t("routed"), data: cs.map(p => p.actual_cost), borderColor: accent, backgroundColor: accent, tension: .3, pointRadius: 0, borderWidth: 2 },
-      { label: t("baseline"), data: cs.map(p => p.baseline_cost), borderColor: muted, backgroundColor: muted, borderDash: [5, 4], tension: .3, pointRadius: 0, borderWidth: 2 } ] } });
+      { label: t("routed"), data: cs.map(p => p.est_cost), borderColor: accent, backgroundColor: accent, tension: .3, pointRadius: 0, borderWidth: 2 },
+      { label: t("baseline"), data: cs.map(p => p.base_cost), borderColor: muted, backgroundColor: muted, borderDash: [5, 4], tension: .3, pointRadius: 0, borderWidth: 2 } ] } });
 
   const rs = d.route_status || [], routes = ["simple", "complex"];
   const statusColors = { success, error: warning, blocked: danger };
@@ -1104,14 +1192,14 @@ function renderCharts(d) {
   const lat = d.latency_by_model || [];
   upsertChart("ch-lat", { type: "bar", options: base,
     data: { labels: lat.map(x => x.model), datasets: [
-      { label: t("avg"), data: lat.map(x => Math.round(x.avg || 0)), backgroundColor: accent, borderRadius: 4 },
-      { label: t("p95"), data: lat.map(x => Math.round(x.p95 || 0)), backgroundColor: pro, borderRadius: 4 } ] } });
+      { label: t("avg"), data: lat.map(x => x.avg == null ? null : Math.round(x.avg)), backgroundColor: accent, borderRadius: 4 },
+      { label: t("p95"), data: lat.map(x => x.p95 == null ? null : Math.round(x.p95)), backgroundColor: pro, borderRadius: 4 } ] } });
 
   const tok = d.tokens_by_route || [];
   upsertChart("ch-tok", { type: "bar", options: base,
     data: { labels: tok.map(x => t(x.route)), datasets: [
-      { label: t("input"), data: tok.map(x => x.input_tokens), backgroundColor: accent, borderRadius: 4 },
-      { label: t("output"), data: tok.map(x => x.output_tokens), backgroundColor: success, borderRadius: 4 } ] } });
+      { label: t("input"), data: tok.map(x => x.in_tok), backgroundColor: accent, borderRadius: 4 },
+      { label: t("output"), data: tok.map(x => x.out_tok), backgroundColor: success, borderRadius: 4 } ] } });
 }
 
 /* ================================================================ accounts: sign-in, sign-up, reset */

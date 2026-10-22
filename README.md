@@ -7,7 +7,7 @@ A proxy that sits between an AI agent and its model provider and does three jobs
 3. **Records** every call so a dashboard can show cost, errors and speed.
 
 It costs nothing to run: answers come from Groq's free tier, routing decisions come from a small model running locally
-with Ollama, and the dashboard's costs are **simulated** (real token counts priced as GPT-4o-mini vs GPT-4o).
+with Ollama, and the dashboard's costs are **estimates** (provider-reported token counts priced at Groq's public list prices; the free tier is not billed).
 
 ## How it works
 
@@ -124,10 +124,13 @@ from the address bar immediately and posts them to the server, which verifies th
 2. Chat: **Simple task** -> should go to the small model.
 3. Chat: **Complex task** -> should go to the big model.
 4. Chat: **Loop scenario** -> `fetch_report` always fails; Mirsad blocks the agent on the 4th attempt.
-5. Dashboard: red alert, loops blocked, hypothetical savings, latency per model, and a log with the reason for every route.
+5. Dashboard (admins, default **Live**): user turns, model calls and provider attempts are counted separately; tokens and
+   estimated cost use provider-reported usage only; latency is split into local classification, model call, provider
+   attempt and end-to-end turn. The help section on the dashboard defines every number, time basis and limitation.
 
-The line under each answer shows who classified, who answered, live or mock, where the token counts came from, and the
-priced cost versus an all-GPT-4o baseline. The two costs are equal when the task went to the big model.
+Cost figures are **estimated inference cost at list price**, not an invoice. The comparison re-prices the *same recorded
+tokens* at the configured BIG model's rates; it is hypothetical, can be negative, and does not prove real savings.
+Prices live in `config.MODEL_PRICES` (source and retrieval date next to it): update them there when Groq changes a rate.
 
 ## What is where
 

@@ -137,7 +137,7 @@ def env(monkeypatch):
     monkeypatch.setattr(ws, "supa", fake)
     monkeypatch.setattr(ws, "limiter", RateLimiter())
     monkeypatch.setattr(ws, "_manager", SessionManager(ws.conn, fake, config.SESSION_SECRET, clock=clock))
-    for table in ("auth_sessions", "app_users", "message_feedback", "conversations", "messages", "requests", "provider_attempts"):
+    for table in ("auth_sessions", "app_users", "message_feedback", "conversations", "messages", "requests", "provider_attempts", "turns"):
         ws.conn.execute(f"DELETE FROM {table}")
     ws.conn.commit()
     proxy_main.guard.reset()
@@ -499,7 +499,7 @@ def test_per_user_request_records_stay_separate_and_only_an_admin_sees_them(env)
     assert len(metrics.load(user_id=uid_a)) == 2 and len(metrics.load(user_id=uid_b)) == 1
     assert not set(metrics.load(user_id=uid_a)["request_id"]) & set(metrics.load(user_id=uid_b)["request_id"])
     assert len(metrics.load(user_id="someone-else")) == 0
-    assert {r["user_id"] for r in adm.get("/api/metrics").json()["recent"]} == {uid_a, uid_b}
+    assert {r["user_id"] for r in adm.get("/api/metrics?kind=all").json()["recent"]} == {uid_a, uid_b}
     for client in (a, b):                                                     # ordinary users: no global view in any form
         assert client.get("/api/metrics").status_code == 403
 
@@ -535,7 +535,7 @@ def test_admin_sees_everything_and_can_reset_with_csrf(env, monkeypatch):
     adm, csrf_adm, uid_adm = sign_in(env, "boss@example.com")
     make_admin(uid_adm)
     chat(a, csrf_a, "from a")
-    m = adm.get("/api/metrics").json()
+    m = adm.get("/api/metrics?kind=all").json()
     assert m["summary"]["total"] == 1 and m["recent"][0]["user_id"]
     users_json = adm.get("/api/admin/users").json()["users"]
     assert {u["email"]: u["role"] for u in users_json} == {"a@example.com": "user", "boss@example.com": "admin"}
@@ -561,7 +561,7 @@ def test_legacy_records_without_an_owner_are_admin_only(env):
     make_admin(uid_adm)
     assert len(metrics.load(user_id=uid_a)) == 0
     assert a.get("/api/metrics").status_code == 403
-    assert adm.get("/api/metrics").json()["summary"]["total"] == 1
+    assert adm.get("/api/metrics?kind=all").json()["summary"]["total"] == 1
 
 
 # ===================================================================== the proxy on port 8000

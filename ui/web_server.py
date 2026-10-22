@@ -170,15 +170,7 @@ def _records(df: pd.DataFrame, cols: list[str]) -> list[dict]:
 
 def _alert_data() -> dict:
     """Same rules as monitoring.metrics.alerts, returned as numbers so the page can show them in Arabic or English."""
-    recent = metrics.load(since_minutes=config.ALERT_WINDOW_MIN)
-    data = {"window_min": config.ALERT_WINDOW_MIN, "error_threshold": config.ALERT_ERROR_RATE,
-            "error_rate": None, "blocked": 0}
-    if recent.empty:
-        return data
-    if len(recent) >= 3:
-        data["error_rate"] = float((recent["status"] == "error").mean())
-    data["blocked"] = int((recent["status"] == "blocked").sum())
-    return data
+    return metrics.alert_data(metrics.load(since_minutes=config.ALERT_WINDOW_MIN))
 
 
 def _proxy_headers() -> dict:
@@ -197,25 +189,56 @@ def _user_json(p: Principal) -> dict:
     return {"name": p.name, "email": p.email, "role": p.role}
 
 
-def _dashboard_payload(df: pd.DataFrame) -> dict:
-    out = {"summary": {k: _clean(v) for k, v in metrics.summarize(df).items()}}
+def _dashboard_payload(df: pd.DataFrame, attempts: pd.DataFrame, turns: pd.DataFrame, ungroupable: int) -> dict:
+    """Everything is computed from the SAME selected call records (execution kind + time window); turns and feedback use
+    the same kind and window, with their own time basis (turn start / answer time) stated on the page."""
+    out = {"summary": _jsonable(metrics.summarize(df, attempts)), "turns": _jsonable(metrics.summarize_turns(turns, ungroupable)),
+           "definitions": _definitions()}
     if df.empty:
         return out
-    ok = df[df["status"] == "success"]
-    if not ok.empty:
-        cum = ok[["time", "actual_cost", "baseline_cost"]].copy()
-        cum[["actual_cost", "baseline_cost"]] = cum[["actual_cost", "baseline_cost"]].cumsum()
+    d = metrics.annotate(df)
+    matched = d[d["est_cost"].notna() & d["base_cost"].notna()]
+    if not matched.empty:
+        cum = matched[["time", "est_cost", "base_cost"]].copy()
+        cum[["est_cost", "base_cost"]] = cum[["est_cost", "base_cost"]].cumsum()
         step = max(1, len(cum) // 200)                      # keep the chart light
         cum = pd.concat([cum.iloc[::step], cum.iloc[[-1]]]).drop_duplicates()
-        out["cost_series"] = _records(cum, ["time", "actual_cost", "baseline_cost"])
-        lat = ok.assign(m=ok["model"].astype(str).str.split("/").str[-1]).groupby("m")["latency_ms"]
-        out["latency_by_model"] = [{"model": m, "avg": _clean(g.mean()), "p95": _clean(g.quantile(0.95))} for m, g in lat]
-        tok = ok.groupby("route")[["input_tokens", "output_tokens"]].sum().reset_index()
-        out["tokens_by_route"] = _records(tok, ["route", "input_tokens", "output_tokens"])
-    mix = df.groupby(["route", "status"]).size().reset_index(name="count")
+        out["cost_series"] = _records(cum, ["time", "est_cost", "base_cost"])
+    ok = d[(d["status"] == "success") & d["call_ms"].notna()]
+    if not ok.empty:
+        out["latency_by_model"] = [{"model": m, **_jsonable(metrics.stat(g))}
+                                   for m, g in ok.assign(m=ok["model"].astype(str).str.split("/").str[-1]).groupby("m")["call_ms"]]
+    prov = d[d["usage_kind"] == "provider"]
+    if not prov.empty:
+        tok = prov.groupby("route")[["in_tok", "out_tok"]].sum().reset_index()
+        out["tokens_by_route"] = _records(tok, ["route", "in_tok", "out_tok"])
+    mix = d.groupby(["route", "status"]).size().reset_index(name="count")
     out["route_status"] = _records(mix, ["route", "status", "count"])
-    out["recent"] = _records(df.iloc[::-1].head(50), ADMIN_REQUEST_COLS)
+    out["recent"] = _records(d.iloc[::-1].head(50), ADMIN_REQUEST_COLS)
     return out
+
+
+def _jsonable(obj):
+    if isinstance(obj, dict):
+        return {k: _jsonable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_jsonable(v) for v in obj]
+    return _clean(obj)
+
+
+def _definitions() -> dict:
+    return {"percentiles": "linear interpolation (numpy default) over the samples counted as n; flagged below "
+                           f"{metrics.LOW_SAMPLE} samples",
+            "time_basis": {"calls": "when each model call was recorded", "attempts": "follow their model call",
+                           "turns": "when the turn started (server receipt of the message)",
+                           "feedback": "when the rated answer was produced"},
+            "turn_duration": "server receipt of the user message to agent completed, failed or blocked (monotonic clock); "
+                             "not available for turns recorded before this release",
+            "model_call_duration": "provider dispatch to the final attempt's return, including failover and Retry-After waits; "
+                                   "excludes local classification, loop guard and database writes",
+            "pricing": {"version": config.PRICING_VERSION, "currency": config.PRICING_CURRENCY, "unit": config.PRICING_UNIT,
+                        "retrieved": config.PRICING_RETRIEVED, "source_url": config.PRICING_SOURCE_URL,
+                        "baseline_model": config.BIG_MODEL}}
 
 
 # ---------------------------------------------------------------- page + static
@@ -493,15 +516,18 @@ class ChatRequest(BaseModel):
     conversation_id: str | None = Field(default=None, max_length=64)
 
 
+TURN_OUTCOME = {"ok": "completed", "error": "failed", "blocked": "blocked", "step_limit": "step_limit"}
+
+
 @app.post("/api/chat")
 def chat(req: ChatRequest, p: Principal = Depends(require_user)):
     # Plain `def`: FastAPI runs it in a worker thread, so a slow agent never blocks the server.
+    received_at, received = time.time(), time.perf_counter()   # turn duration starts at server receipt (monotonic clock)
     task = req.task.strip()
     if not task:
         raise ApiError(422, "empty_task", "Type a message first.")
     if not limiter.allow(f"chat:{p.user_id}", config.CHAT_RATE_PER_MIN, 60):
         raise ApiError(429, "rate_limited", "You are sending messages too quickly. Wait a moment.")
-    started = time.time()
     conv = _own_conversation(req.conversation_id, p) if req.conversation_id else chatstore.create(conn, p.user_id, task)
     history = chatstore.history_for_agent(conn, conv["id"], p.user_id)          # from the database, not the browser
     chatstore.add_message(conn, conv["id"], p.user_id, "user", task)
@@ -511,9 +537,13 @@ def chat(req: ChatRequest, p: Principal = Depends(require_user)):
     except RuntimeError as exc:                   # setup problem inside the agent (e.g. internal token missing)
         log.error("agent setup error: %s", exc)
         raise ApiError(503, "setup_error", "The agent is not configured correctly. Check the server setup.") from None
+    turn_ms = (time.perf_counter() - received) * 1000          # receipt -> agent completed, failed or blocked
+    status = result["status"]
+    if result.get("turn_id"):
+        db.insert_turn(conn, turn_id=result["turn_id"], user_id=p.user_id, conversation_id=conv["id"], session_id=conv["session_id"],
+                       started_at=received_at, duration_ms=turn_ms, outcome=TURN_OUTCOME.get(status, "failed"))
     # Technical details (route, model, tokens, cost, failover) stay in the monitoring records for administrators.
     # Errors are stored as a safe code, never as raw provider/proxy text.
-    status = result["status"]
     stored = chatstore.safe_error_code(result["answer"]) if status == "error" else result["answer"]
     files = result.get("files") or []
     message_id = chatstore.add_message(conn, conv["id"], p.user_id, "assistant", stored, status=status,
@@ -557,20 +587,25 @@ def delete_feedback(message_id: int, p: Principal = Depends(require_user)):
 
 
 # ---------------------------------------------------------------- dashboard (administrators only)
-ADMIN_REQUEST_COLS = ["time", "request_id", "user_id", "session_id", "execution_mode", "status", "routing_mode", "route_source",
-                      "fallback_reason", "llm_route", "route", "model", "classifier_ms", "credential_alias",
-                      "provider_attempts", "token_source", "input_tokens", "output_tokens", "latency_ms",
-                      "actual_cost", "baseline_cost", "reason", "error"]
+ADMIN_REQUEST_COLS = ["time", "request_id", "user_id", "turn_id", "session_id", "execution_mode", "status", "routing_mode",
+                      "route_source", "fallback_reason", "llm_route", "route", "model", "classify_ms", "credential_alias",
+                      "provider_attempts", "usage_kind", "in_tok", "out_tok", "call_ms", "call_ms_derived", "latency_ms",
+                      "est_cost", "cost_basis", "reason", "error"]
 ATTEMPT_COLS = ["time", "request_id", "attempt_no", "credential_alias", "model", "outcome",
                 "http_status", "duration_ms", "failover", "failover_reason", "retry_after_s", "error"]
 
 
 @app.get("/api/metrics")
-def dashboard_metrics(minutes: float | None = None, kind: str = "all", p: Principal = Depends(require_admin)):
+def dashboard_metrics(minutes: float | None = None, kind: str = "live", p: Principal = Depends(require_admin)):
+    """Default is Live: mock and legacy records are shown only when asked for (or with kind=all)."""
+    if kind not in ("all", "live", "mock", "legacy"):
+        raise ApiError(422, "invalid_filter", "Unknown filter value.")
     df = metrics.filter_execution(metrics.load(since_minutes=minutes), kind)
-    out = {"health": _proxy_health(), "alert_data": _alert_data(), **_dashboard_payload(df)}
-    att = metrics.load_attempts(limit=20)
-    out["attempts"] = _records(att, ATTEMPT_COLS) if not att.empty else []
+    att = metrics.load_attempts(limit=None, request_ids=df["request_id"] if not df.empty else [])
+    turns, ungroupable = metrics.load_turns(since_minutes=minutes, kind=kind)
+    out = {"health": _proxy_health(), "alert_data": _alert_data(), "filter": {"kind": kind, "minutes": minutes},
+           **_dashboard_payload(df, att, turns, ungroupable)}
+    out["attempts"] = _records(att.head(20), ATTEMPT_COLS) if not att.empty else []
     return out
 
 

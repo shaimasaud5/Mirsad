@@ -1,32 +1,39 @@
 """
-Cost math. Formula for any tier:
-    cost = input_tokens / 1M * input_price  +  output_tokens / 1M * output_price
+Cost math: ESTIMATED inference cost at list price (not money charged, not an invoice).
 
-actual_cost   = priced at the tier the router chose
-baseline_cost = priced at GPT-4o (as if there were no router)
-saved         = baseline_cost - actual_cost
+    cost = input_tokens / 1M * input_price  +  output_tokens / 1M * output_price      (per model, config.MODEL_PRICES)
 
-Overall savings % must be computed as  sum(saved) / sum(baseline),
-NOT as the average of per-request percentages (that would be misleading).
+  - A call's cost needs BOTH token counts reported by the provider and a configured price for the model.
+    Otherwise it is None ("unavailable"): never 0.
+  - baseline = the same recorded tokens priced at config.BIG_MODEL's rates. It is hypothetical: another model could
+    produce different token counts or tool calls, so it says nothing about real savings or answer quality.
+  - Overall savings % = sum(difference) / sum(baseline) over MATCHED calls, never the average of per-call percentages.
 """
 import config
 
 
-def price(tier: str, input_tokens: int, output_tokens: int) -> float:
-    p = config.PRICES[tier]
-    return input_tokens / 1_000_000 * p["input"] + output_tokens / 1_000_000 * p["output"]
+def price_for(model: str | None) -> dict | None:
+    return config.MODEL_PRICES.get(model) if model else None
 
 
-def request_costs(route: str, input_tokens: int, output_tokens: int) -> tuple[float, float]:
-    """Returns (actual_cost, baseline_cost) in USD."""
-    actual = price(route, input_tokens, output_tokens)
-    baseline = price(config.BASELINE_TIER, input_tokens, output_tokens)
-    return actual, baseline
+def call_cost(model: str | None, input_tokens, output_tokens) -> float | None:
+    """Estimated cost in USD, or None when the price or either token count is unknown."""
+    p = price_for(model)
+    if p is None or input_tokens is None or output_tokens is None:
+        return None
+    if input_tokens != input_tokens or output_tokens != output_tokens:      # NaN
+        return None
+    return float(input_tokens) / 1_000_000 * p["input"] + float(output_tokens) / 1_000_000 * p["output"]
+
+
+def baseline_cost(input_tokens, output_tokens) -> float | None:
+    """The same tokens priced at the configured BIG model's rates (hypothetical)."""
+    return call_cost(config.BIG_MODEL, input_tokens, output_tokens)
 
 
 def estimate_tokens(messages: list[dict]) -> int:
-    """Rough token estimate (~4 characters per token) for requests that never
-    reached a model (blocked loops). Clearly labelled 'estimated' on the dashboard."""
+    """Rough token estimate (~4 characters per token). Used only by the offline mock model, whose numbers are
+    labelled 'mock-estimate' and never mixed with provider-reported usage."""
     chars = 0
     for m in messages:
         content = m.get("content")
@@ -38,5 +45,8 @@ def estimate_tokens(messages: list[dict]) -> int:
     return max(1, chars // 4)
 
 
-def savings_percent(total_saved: float, total_baseline: float) -> float:
-    return 0.0 if total_baseline <= 0 else total_saved / total_baseline * 100
+def savings_percent(difference, baseline) -> float | None:
+    """difference / baseline * 100, or None (shown as N/A) when the baseline is zero or unavailable. May be negative."""
+    if baseline is None or difference is None or baseline <= 0:
+        return None
+    return difference / baseline * 100

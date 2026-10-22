@@ -65,19 +65,24 @@ CHAT_RATE_PER_MIN = int(os.getenv("MIRSAD_CHAT_RATE_PER_MIN", "20"))      # per 
 LOOP_THRESHOLD = int(os.getenv("LOOP_THRESHOLD", "3"))
 ROUTER_THRESHOLD = int(os.getenv("ROUTER_THRESHOLD", "3"))
 
-# ---- Pricing (USD per 1M tokens) -----------------------------------------
-# Groq's free tier costs us nothing, so we price every call as if the company
-# were paying OpenAI. The small model is priced as GPT-4o-mini, the big model
-# (and the "no router" baseline) as GPT-4o.
-# VERIFY against https://openai.com/api/pricing before submitting.
-PRICES = {
-    "simple":  {"name": "gpt-4o-mini", "input": 0.15, "output": 0.60},
-    "complex": {"name": "gpt-4o",      "input": 2.50, "output": 10.00},
+# ---- Pricing: ESTIMATED inference cost (not an invoice) -------------------------
+# Public Groq on-demand list prices for the answering models, USD per 1M tokens, separate input/output rates.
+# Groq's free tier is not billed, so these numbers describe what the recorded usage WOULD cost at list price.
+# Keys are the exact configured model ids (SMALL_MODEL / BIG_MODEL). A model missing here is "price unavailable":
+# it is excluded from cost totals, never priced as zero. Bump PRICING_VERSION whenever a rate changes, so
+# records priced under an older table stay identifiable.
+PRICING_VERSION = "groq-list-2026-10-22"
+PRICING_CURRENCY = "USD"
+PRICING_UNIT = "per 1M tokens"
+PRICING_RETRIEVED = "2026-10-22"
+PRICING_SOURCE_URL = "https://console.groq.com/docs/models"
+MODEL_PRICES = {
+    "groq/openai/gpt-oss-120b": {"input": 0.15, "output": 0.60,
+                                 "source": "https://console.groq.com/docs/model/openai/gpt-oss-120b"},
+    "groq/qwen/qwen3.8-27b": {"input": 0.80, "output": 4.00,
+                              "source": "https://console.groq.com/docs/model/qwen/qwen3.8-27b"},
 }
-BASELINE_TIER = "complex"  # "what if everything went to the expensive model"
-
-# Assumed output size for a request we blocked (it never reached a model)
-BLOCKED_OUTPUT_TOKENS_ESTIMATE = 150
+# The comparison baseline is hypothetical: the SAME recorded tokens priced at BIG_MODEL's rates.
 
 # ---- Storage / URLs -------------------------------------------------------
 DB_PATH = Path(os.getenv("MIRSAD_DB", ROOT / "data" / "mirsad.db"))

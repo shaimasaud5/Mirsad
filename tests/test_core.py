@@ -76,20 +76,19 @@ def test_guard_isolated_per_session():
 
 
 # ------------------------------------------------------------------ cost
-def test_cost_formula():
-    # 1M input + 1M output tokens at GPT-4o prices = 2.50 + 10.00
-    actual, baseline = cost.request_costs("complex", 1_000_000, 1_000_000)
-    assert actual == pytest.approx(12.5) and baseline == pytest.approx(12.5)
+def test_cost_formula_uses_separate_input_and_output_rates(monkeypatch):
+    monkeypatch.setattr(cost.config, "MODEL_PRICES", {"m": {"input": 2.0, "output": 10.0}})
+    assert cost.call_cost("m", 1_000_000, 1_000_000) == pytest.approx(12.0)
+    assert cost.call_cost("m", 500_000, 0) == pytest.approx(1.0)          # zero output tokens is a real value
 
 
-def test_simple_route_is_cheaper_than_baseline():
-    actual, baseline = cost.request_costs("simple", 120, 40)
-    assert actual == pytest.approx(0.000042)
-    assert baseline == pytest.approx(0.0007)
+def test_unknown_price_or_usage_is_unavailable_not_zero(monkeypatch):
+    monkeypatch.setattr(cost.config, "MODEL_PRICES", {"m": {"input": 2.0, "output": 10.0}})
+    assert cost.call_cost("other", 10, 10) is None
+    assert cost.call_cost("m", None, 10) is None and cost.call_cost("m", 10, float("nan")) is None
 
 
-def test_savings_percent_is_weighted_not_averaged():
-    # 7 simple requests (94% each) + 3 complex (0% each)
-    saved = 7 * (0.0007 - 0.000042)
-    baseline = 7 * 0.0007 + 3 * 0.008
-    assert cost.savings_percent(saved, baseline) == pytest.approx(15.9, abs=0.1)
+def test_savings_percent_is_weighted_and_na_for_a_zero_baseline():
+    assert cost.savings_percent(25, 100) == pytest.approx(25)
+    assert cost.savings_percent(-50, 100) == pytest.approx(-50)           # negative savings are allowed
+    assert cost.savings_percent(0, 0) is None and cost.savings_percent(1, None) is None

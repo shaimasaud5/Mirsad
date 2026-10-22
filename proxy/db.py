@@ -57,6 +57,30 @@ NEW_COLUMNS = {
     "conversation_id": "TEXT",
 }
 
+# Added by the metrics-accuracy release (same rules: additive ALTER TABLE, backup first, NULL on older rows).
+METRICS_COLUMNS = {
+    "model_call_ms": "REAL",        # answering-model call only: provider dispatch -> final attempt returned (failover and
+                                    # Retry-After waits included; classification, loop guard and DB write excluded)
+    "est_cost_usd": "REAL",         # estimated inference cost at list price when written; NULL = unavailable (never 0)
+    "baseline_big_usd": "REAL",     # the same tokens priced at BIG_MODEL's rates (hypothetical comparison)
+    "pricing_version": "TEXT",      # config.PRICING_VERSION used for the two columns above
+}
+
+# One row per user turn (one submitted message and its whole agent run), written by the web server.
+TURNS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS turns (
+    turn_id         TEXT NOT NULL,
+    user_id         TEXT NOT NULL,                        -- verified owner, from the server-side session
+    conversation_id TEXT,
+    session_id      TEXT,
+    started_at      REAL,                                 -- wall clock when the server received the submission
+    duration_ms     REAL,                                 -- monotonic clock: receipt -> agent finished (completed/failed/blocked)
+    outcome         TEXT,                                 -- completed | failed | blocked | step_limit
+    PRIMARY KEY (user_id, turn_id)
+);
+CREATE INDEX IF NOT EXISTS idx_turns_started ON turns(started_at);
+"""
+
 # Application data owned by users. Role lives HERE (never in Supabase metadata, which users can edit).
 AUTH_SCHEMA = """
 CREATE TABLE IF NOT EXISTS app_users (
@@ -179,6 +203,16 @@ def _migrate(conn: sqlite3.Connection, path: Path | None = None) -> None:
     conn.commit()
 
 
+def _migrate_metrics(conn: sqlite3.Connection, path: Path | None = None) -> None:
+    existing = {r[1] for r in conn.execute("PRAGMA table_info(requests)")}
+    missing = {c: t for c, t in METRICS_COLUMNS.items() if c not in existing}
+    if missing and path is not None:
+        _backup_before_migration(conn, path, "pre-metrics")
+    for col, typ in missing.items():
+        conn.execute(f"ALTER TABLE requests ADD COLUMN {col} {typ}")
+    conn.commit()
+
+
 def connect(path: Path | None = None) -> sqlite3.Connection:
     path = Path(path or config.DB_PATH)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -186,7 +220,11 @@ def connect(path: Path | None = None) -> sqlite3.Connection:
     conn.execute("PRAGMA journal_mode=WAL")   # lets the dashboard read while we write
     conn.execute(SCHEMA)
     conn.execute(ATTEMPTS_SCHEMA)
+    if path.exists() and not {"model_call_ms"} <= {r[1] for r in conn.execute("PRAGMA table_info(requests)")}:
+        _backup_before_migration(conn, path, "pre-metrics")   # BEFORE any column is added, so it holds the original data
     _migrate(conn, path)
+    _migrate_metrics(conn, path)
+    conn.executescript(TURNS_SCHEMA)
     _premigrate_messages(conn, path)         # old `messages` table: add files_json BEFORE the schema script runs
     conn.executescript(AUTH_SCHEMA)          # after _migrate: idx_requests_user needs requests.user_id
     return conn
@@ -211,6 +249,14 @@ def insert_attempts(conn: sqlite3.Connection, base: dict, model: str, attempts) 
         conn.commit()
 
 
+def insert_turn(conn: sqlite3.Connection, *, turn_id: str, user_id: str, conversation_id: str | None, session_id: str | None,
+                started_at: float, duration_ms: float, outcome: str) -> None:
+    with _lock:
+        conn.execute("INSERT OR REPLACE INTO turns (turn_id, user_id, conversation_id, session_id, started_at, duration_ms, outcome) "
+                     "VALUES (?,?,?,?,?,?,?)", (turn_id, user_id, conversation_id, session_id, started_at, duration_ms, outcome))
+        conn.commit()
+
+
 def insert(conn: sqlite3.Connection, row: dict) -> None:
     cols = ", ".join(row)
     marks = ", ".join("?" for _ in row)
@@ -223,4 +269,5 @@ def clear(conn: sqlite3.Connection) -> None:
     with _lock:
         conn.execute("DELETE FROM requests")
         conn.execute("DELETE FROM provider_attempts")
+        conn.execute("DELETE FROM turns")
         conn.commit()

@@ -134,7 +134,7 @@ def main():
     test = eval_routing("test_prompts.csv")
     dev = eval_routing("dev_prompts.csv")
     l = eval_loops()
-    s = metrics.summarize(metrics.load())
+    s = metrics.summarize(metrics.filter_execution(metrics.load(), "live"))
 
     lines = ["# Mirsad - Evaluation results", "",
              "## 1. Routing accuracy (offline, hand-labelled prompts)", "",
@@ -166,16 +166,21 @@ def main():
         "| control scenario | blocked? |", "|---|---|",
     ]
     lines += [f"| {c['scenario']} | {'YES (bad)' if c['blocked'] else 'no (good)'} |" for c in l["controls"]]
-    lines += ["", "## 3. Cost savings (from the live request log)", ""]
+    lines += ["", "## 3. Estimated inference cost (live records in the request log)", ""]
     if s.get("total"):
-        lines += [f"- Requests logged: {s['total']} (success {s['success']}, errors {s['errors']}, "
-                  f"blocked {s['blocked']})",
-                  f"- Actual cost ${s['actual_cost']:.6f} vs baseline ${s['baseline_cost']:.6f} "
-                  f"-> **savings {s['savings_pct']:.1f}%**",
-                  f"- Share routed to the small model: {s['simple_share']:.0%}",
-                  f"- Estimated loop savings: ${s['est_loop_savings']:.6f}",
-                  "- Costs are simulated with public OpenAI prices (GPT-4o-mini vs GPT-4o) "
-                  "applied to real token counts."]
+        c, cs = s["calls"], s["cost"]
+        bl = cs["baseline"]
+        lines += [f"- Records: {s['total']} (model calls {c['model_calls']}: {c['succeeded']} succeeded, {c['failed']} failed; "
+                  f"blocked loops {c['blocked']}, not model calls)",
+                  f"- Estimated cost at list price ({cs['pricing_version']}, USD per 1M tokens): "
+                  + (f"${cs['estimated_cost']:.6f} over {cs['priced_calls']} priced calls" if cs["estimated_cost"] is not None
+                     else "unavailable (no provider-reported usage with a configured price)"),
+                  "- Hypothetical comparison (same recorded tokens at the configured BIG model's rates): "
+                  + (f"${bl['hypothetical']:.6f} vs ${bl['estimated']:.6f} over {bl['matched_calls']} matched calls"
+                     + (f" -> {bl['pct']:+.1f}% difference (negative = estimate is higher)" if bl["pct"] is not None else " -> N/A")
+                     if bl["matched_calls"] else "N/A (no matched calls)"),
+                  "- This is an estimate, not an invoice, and does not prove real savings: another model could use different "
+                  "tokens or tool calls. Loop blocking is reported as a count only; the unexecuted calls' usage is unknown."]
     else:
         lines += ["- No requests logged yet. Run the agent, then re-run this script."]
 
