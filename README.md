@@ -231,7 +231,7 @@ Real captures of the running app, shown here in its Arabic interface (English is
 
 </div>
 
-> The monitoring screenshots come from a test account with a single live request, so counts are tiny and feedback is empty. They show the layout, not typical numbers.
+> 
 
 ---
 
